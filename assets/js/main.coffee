@@ -1,12 +1,19 @@
 root = exports ? this
 
 root.user_list_template = _.template "<li data-user='<%=username%>'><%=username%></li>"
-root.user_join_template = _.template "<article class='event' data-user='<%=username%>'><small><%=timestamp%></small>
-    <strong><%=username%></strong> join to our room</article>"
-root.user_left_template = _.template "<article class='event' data-user='<%=username%>'><small><%=timestamp%></small>
-    <strong><%=username%></strong> left our room</article>"
-root.new_message_template = _.template "<article class='message' data-user='<%=username%>'><small><%=timestamp%></small>
-    <strong><%=username%>:</strong> <%=text%></article>"
+root.user_join_template = _.template "<article class='event' data-user='<%=username%>'><small class='timestamp'>[<%=timestamp%>]</small>
+    <strong><%=username%></strong> join to our room
+    </article>"
+root.user_left_template = _.template "<article class='event' data-user='<%=username%>'><small class='timestamp'>[<%=timestamp%>]</small>
+    <strong><%=username%></strong> left our room
+    </article>"
+root.new_message_template = _.template "<article class='message' data-user='<%=username%>'><small class='timestamp'>[<%=timestamp%>]</small>
+    <strong><%=username%>:</strong> <%=text%>
+    </article>"
+    
+root.new_event_template = _.template "<article class='message' data-user='<%=username%>'>
+    <em><strong><%=username%></strong> <%=text%></em>
+    </article>"
 
 root.add_user_to_list = (user) ->
     $("#player_list").append root.user_list_template user
@@ -19,11 +26,12 @@ root.remove_user_from_list = (user) ->
     
 root.add_message = (msg) ->
     $("#chat_box").append root.new_message_template msg
+    
+root.add_event = (event) ->
+    $("#chat_box").append root.new_event_template event
 
 $(document).ready ->
 
-    
-    
     root.socket = io.connect()
   
     root.socket.on "server_message", (data) ->
@@ -35,7 +43,7 @@ $(document).ready ->
         
     root.connect = ()->
         root.socket.emit "connect",
-            username: $(".navbar-text").text().split("|")[0].split(", ")[1].replace(/^\s+|\s+$/g, '')
+            username: $(".username").data "username"
             room: "Main"
       
     root.socket.on "plz_connect", ->
@@ -44,6 +52,10 @@ $(document).ready ->
     root.socket.on "chat_message", (data)->
         console.log "New message", data
         root.add_message data
+        
+    root.socket.on "event", (data)->
+        console.log "New event", data
+        root.add_event data
         
     root.socket.on "new_player", (data)->
         console.log "New player", data.username

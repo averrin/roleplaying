@@ -42,9 +42,9 @@ html(lang='en')
           span.icon-bar
           span.icon-bar
 
-        a.navbar-brand(href='/') Otagai.js
+        a.navbar-brand(href='/') RPG.me
         if req.user
-          p.navbar-text.pull-right
+          p.navbar-text.pull-right.username(data-username="#{req.user.name}")
             | Welcome, #{req.user.name}
             | | 
             a(href='/logout') logout
