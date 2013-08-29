@@ -1,17 +1,17 @@
 root = exports ? this
 
 root.user_list_template = _.template "<li data-user='<%=username%>'><%=username%></li>"
-root.user_join_template = _.template "<article class='event' data-user='<%=username%>'><small class='timestamp'>[<%=timestamp%>]</small>
-    <strong><%=username%></strong> join to our room
+root.user_join_template = _.template "<article class='system_event' data-user='<%=username%>'>
+    <em><strong><%=username%></strong> join to our room</em>
     </article>"
-root.user_left_template = _.template "<article class='event' data-user='<%=username%>'><small class='timestamp'>[<%=timestamp%>]</small>
-    <strong><%=username%></strong> left our room
+root.user_left_template = _.template "<article class='system_event' data-user='<%=username%>'>
+    <em><strong><%=username%></strong> left our room</em>
     </article>"
 root.new_message_template = _.template "<article class='message' data-user='<%=username%>'><small class='timestamp'>[<%=timestamp%>]</small>
     <strong><%=username%>:</strong> <%=text%>
     </article>"
     
-root.new_event_template = _.template "<article class='message' data-user='<%=username%>'>
+root.new_event_template = _.template "<article class='event' data-user='<%=username%>'>
     <em><strong><%=username%></strong> <%=text%></em>
     </article>"
 

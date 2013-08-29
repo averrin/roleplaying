@@ -40,7 +40,7 @@ on_message = (socket, message_text)->
     
 on_connect = (socket, data) ->
     console.log "New user for %s. Username: %s", socket.id, data.username
-    console.log data
+    console.log "Auth data: ", data
     socket.join(data.room)
     socket.set "data", data
     data.timestamp = dateFormat(new Date(), df)

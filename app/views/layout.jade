@@ -42,7 +42,7 @@ html(lang='en')
           span.icon-bar
           span.icon-bar
 
-        a.navbar-brand(href='/') RPG.me
+        a.navbar-brand(href='/') RPG Workshop
         if req.user
           p.navbar-text.pull-right.username(data-username="#{req.user.name}")
             | Welcome, #{req.user.name}
@@ -56,7 +56,6 @@ html(lang='en')
           li: a(href='/') Home
           if req.user
             li: a(href='/users/') Users
-            li: a(href='/articles/') Manage articles
             li: a(href='/room/') Play room
               
     block content
