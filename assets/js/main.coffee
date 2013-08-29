@@ -37,8 +37,9 @@ $(document).ready ->
         root.socket.emit "connect",
             username: $(".navbar-text").text().split("|")[0].split(", ")[1].replace(/^\s+|\s+$/g, '')
             room: "Main"
-        
-    root.connect()
+      
+    root.socket.on "plz_connect", ->
+        root.connect()
     
     root.socket.on "chat_message", (data)->
         console.log "New message", data
