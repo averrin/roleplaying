@@ -1,4 +1,8 @@
 _ = require("underscore")
+dateFormat = require('dateformat')
+
+df = "[mmmm dS, HH:MM]"
+df = "[HH:MM:ss]"
 
 exports.init = (io)->
     rooms = {}
@@ -14,12 +18,14 @@ exports.init = (io)->
                         text: msg
                         username: data.username
                         room: data.room
+                        timestamp: dateFormat(new Date(), df)
                     io.sockets.in(data.room).emit "chat_message", message
             
         socket.on "connect", (data) ->
             console.log data
             socket.join(data.room)
             socket.set "data", data
+            data.timestamp = dateFormat(new Date(), df)
             socket.broadcast.to(data.room).emit "new_player", data
             socket.emit "connected", data
             pl = _.pluck _.pluck(io.sockets.clients(data.room), 'store'), 'data'
@@ -29,5 +35,6 @@ exports.init = (io)->
             console.log "Client Disconnected."
             socket.get "data", (err, data)->
                 if data?
-                    socket.broadcast.to(data.room).emit "player_leave", data.username
+                    data.timestamp = dateFormat(new Date(), df)
+                    socket.broadcast.to(data.room).emit "player_leave", data
                     

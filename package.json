@@ -23,7 +23,7 @@
   },
   "engines": {
     "node": "0.10.x",
-    "npm": "1.2.x"
+    "npm": ">=1.2"
   },
   "dependencies": {
     "express": "latest",
@@ -45,7 +45,8 @@
     "grunt": "latest",
     "grunt-coffeelint": "latest",
     "node-dev": "latest",
-    "grunt-contrib-watch": "latest"
+    "grunt-contrib-watch": "latest",
+    "dateformat": "latest"
   },
   "devDependencies": {
 
