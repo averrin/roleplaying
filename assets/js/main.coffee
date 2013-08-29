@@ -58,4 +58,5 @@ $(document).ready ->
             
     $(".chat_send").on "click", (ev)->
         root.socket.emit "message", $(".chat_input").val()
+        $(".chat_input").val('')
         

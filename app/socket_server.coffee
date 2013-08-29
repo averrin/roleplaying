@@ -14,14 +14,13 @@ exports.init = (io)->
                         text: msg
                         username: data.username
                         room: data.room
-                    socket.broadcast.emit "chat_message", message
-                    socket.emit "chat_message", message
+                    io.sockets.in(data.room).emit "chat_message", message
             
         socket.on "connect", (data) ->
             console.log data
             socket.join(data.room)
             socket.set "data", data
-            socket.broadcast.emit "new_player", data
+            socket.broadcast.to(data.room).emit "new_player", data
             socket.emit "connected", data
             pl = _.pluck _.pluck(io.sockets.clients(data.room), 'store'), 'data'
             socket.emit "players", pl[0]
@@ -30,5 +29,5 @@ exports.init = (io)->
             console.log "Client Disconnected."
             socket.get "data", (err, data)->
                 if data?
-                    socket.broadcast.emit "player_leave", data.username
+                    socket.broadcast.to(data.room).emit "player_leave", data.username
                     
