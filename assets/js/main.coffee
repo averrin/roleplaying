@@ -1,13 +1,17 @@
 root = exports ? this
 
 root.user_list_template = _.template "<li data-user='<%=username%>'><%=username%></li>"
+root.user_join_template = _.template "<li data-user='<%=username%>'><strong><%=username%></strong> join to our room</li>"
+root.user_left_template = _.template "<li data-user='<%=username%>'><strong><%=username%></strong> left our room</li>"
 
 root.add_user_to_list = (username) ->
     $("#player_list").append root.user_list_template username:username
+    $("#chat_box").append root.user_join_template username:username
     
 root.remove_user_from_list = (username) ->
     $("#player_list").html ""
     $("#player_list li[data-user='"+username+"']").remove()
+    $("#chat_box").append root.user_left_template username:username
 
 $(document).ready ->
 
