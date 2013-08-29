@@ -7,9 +7,15 @@ exports.init = (io)->
         socket.emit "server_message",
             status: "connected"
     
-        socket.on "message", (data) ->
-            socket.broadcast.emit "server_message", data
-            socket.emit "server_message", data
+        socket.on "message", (msg) ->
+            socket.get "data", (err, data)->
+                if data?
+                    message =
+                        text: msg
+                        username: data.username
+                        room: data.room
+                    socket.broadcast.emit "chat_message", message
+                    socket.emit "chat_message", message
             
         socket.on "connect", (data) ->
             console.log data
@@ -25,3 +31,4 @@ exports.init = (io)->
             socket.get "data", (err, data)->
                 if data?
                     socket.broadcast.emit "player_leave", data.username
+                    
