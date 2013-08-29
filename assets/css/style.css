@@ -4,4 +4,5 @@ h1{margin-bottom:1em}
 .navbar-inner.red a{color:#fff}
 .bottom{position:fixed;bottom:0;width:100%}
 .chat_panel{padding:8px}
-.chat_input{width:80%}
+#chat_input{width:80%}
+.loader{margin:auto 50%}

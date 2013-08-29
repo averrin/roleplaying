@@ -1,12 +1,12 @@
 root = exports ? this
 
 root.user_list_template = _.template "<li data-user='<%=username%>'><%=username%></li>"
-root.user_join_template = _.template "<li data-user='<%=username%>'><small><%=timestamp%></small>
-    <strong><%=username%></strong> join to our room</li>"
-root.user_left_template = _.template "<li data-user='<%=username%>'><small><%=timestamp%></small>
-    <strong><%=username%></strong> left our room</li>"
-root.new_message_template = _.template "<li data-user='<%=username%>'><small><%=timestamp%></small>
-    <strong><%=username%>:</strong> <%=text%></li>"
+root.user_join_template = _.template "<article class='event' data-user='<%=username%>'><small><%=timestamp%></small>
+    <strong><%=username%></strong> join to our room</article>"
+root.user_left_template = _.template "<article class='event' data-user='<%=username%>'><small><%=timestamp%></small>
+    <strong><%=username%></strong> left our room</article>"
+root.new_message_template = _.template "<article class='message' data-user='<%=username%>'><small><%=timestamp%></small>
+    <strong><%=username%>:</strong> <%=text%></article>"
 
 root.add_user_to_list = (user) ->
     $("#player_list").append root.user_list_template user
@@ -30,8 +30,8 @@ $(document).ready ->
         console.log data
         
     root.socket.on "connected", (data)->
-        console.log "connected"
         $(".loader").hide()
+        $("#chat_input").attr("disabled", null)
         
     root.connect = ()->
         root.socket.emit "connect",
@@ -60,7 +60,9 @@ $(document).ready ->
             root.add_user_to_list e
             
             
-    $(".chat_send").on "click", (ev)->
-        root.socket.emit "message", $(".chat_input").val()
-        $(".chat_input").val('')
+    $("#chat_form").on "submit", (ev)->
+        ev.preventDefault()
+        if $("#chat_input").val() != ''
+            root.socket.emit "message", $("#chat_input").val()
+            $("#chat_input").val('')
         

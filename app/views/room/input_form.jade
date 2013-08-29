@@ -1,3 +1,4 @@
 .bottom.chat_panel
-  input.chat_input(type='text')
-  button.chat_send Send
+    form#chat_form.form-inline
+        input#chat_input(type='text', placeholder='Type here', disabled="disabled").form-control
+        input(type='submit', value='Send')#chat_send.btn.btn-default
