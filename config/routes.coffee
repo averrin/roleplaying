@@ -28,20 +28,24 @@ module.exports = (app, config, passport, auth) ->
 
   app.param 'userId', users.user
 
-  # Article routes
-  app.get '/', articles.index
-  app.get '/articles', articles.manage
-  app.get '/articles/new', auth.requiresLogin, articles.new
-  app.get '/articles/:articleId', articles.show
-  app.post '/articles', auth.requiresLogin, articles.create
-  app.get '/articles/:articleId/edit', auth.requiresLogin, articles.edit
-  app.put '/articles/:articleId', auth.requiresLogin, articles.update
-  app.get '/articles/:articleId/destroy', auth.requiresLogin, articles.destroy
+  # room routes
+  app.get '/', rooms.index
+  app.get '/rooms', rooms.manage
+  app.get '/rooms/new', auth.requiresLogin, rooms.new
+  app.get '/rooms/:roomName', rooms.main
+  app.post '/rooms', auth.requiresLogin, rooms.create
+  app.get '/rooms/:roomId/edit', auth.requiresLogin, rooms.edit
+  app.put '/rooms/:roomId', auth.requiresLogin, rooms.update
+  app.get '/rooms/:roomId/destroy', auth.requiresLogin, rooms.destroy
 
-  app.param 'articleId', articles.article
+  app.param 'roomId', rooms.room
+  app.param 'roomName', rooms.roomName
 
 
   # Play room
-  app.get '/room', room.main
+  #app.get '/rooms', auth.requiresLogin, rooms.index
+  #app.get '/room/:roomId', auth.requiresLogin, rooms.main
+  #
+  #app.param 'roomId', rooms.room
 
   return

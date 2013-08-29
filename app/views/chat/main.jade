@@ -4,11 +4,11 @@ block title
     | Play room
 
 block main
-    h2 Play room
+    h2#room(data-room=room.name)!= 'Play room <strong>' + room.name + '</strong>'
     img(src='/img/preloader.gif').loader
     #chat_box
 
 
 block sidebar
-    h2 Playerlist
+    h2 Players
     ul#player_list

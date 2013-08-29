@@ -44,7 +44,7 @@ html(lang='en')
 
         a.navbar-brand(href='/') RPG Workshop
         if req.user
-          p.navbar-text.pull-right.user(data-user="#{req.user._id}")
+          p.navbar-text.pull-right#user(data-user="#{req.user._id}")
             | Welcome, #{req.user.name}
             | | 
             a(href='/logout') logout
@@ -56,7 +56,7 @@ html(lang='en')
           li: a(href='/') Home
           if req.user
             li: a(href='/users/') Users
-            li: a(href='/room/') Play room
+            li: a(href='/rooms/') Play rooms
               
     block content
     
@@ -71,3 +71,7 @@ html(lang='en')
       + ':3301/livereload.js"></'
       + 'script>')
       $("a[href='"+location.pathname+"']").parent().addClass("active")
+      $("#new_room").on("click", function(ev){location = "/rooms/new"})
+      $(".join_room").on("click", function(ev){location = "/rooms/" + $(this).data("room")})
+
+    block scripts

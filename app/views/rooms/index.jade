@@ -1,0 +1,14 @@
+extends ../layout
+
+block title
+  | List rooms
+
+block content
+  
+    .container
+        .row
+            button#new_room.btn.btn-primary.pull-right Add room
+        each room in all_rooms
+            .row
+                p= room.name + " (" + room.master + ")"
+                    button.btn.btn-default.join_room(data-room=room.name) Join

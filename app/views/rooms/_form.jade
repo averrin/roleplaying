@@ -1,0 +1,21 @@
+extends base
+
+block main
+  - var action = '/rooms'
+  if (!room.isNew)
+    - action += '/'+room.id
+  
+  form(action=action, method='post')
+    if(!room.isNew)
+      input(type='hidden', name='_method', value='put')
+    
+    .form-group
+      label Name
+      input.form-control(name='name', type='text', value=room.name)
+    
+    .form-group
+      label Master
+      input.form-control(name='master', type='text', value=room.master)
+    
+    p
+      button.btn.btn-primary(type='submit') Save room

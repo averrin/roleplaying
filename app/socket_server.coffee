@@ -3,6 +3,7 @@ dateFormat = require('dateformat')
 mongoose = require 'mongoose'
 
 User = mongoose.model 'User'
+Room = mongoose.model 'Room'
 
 dice = require('./dice')
 console.log "Roll 2d5+8 = %d", dice.rollDie "2d5+8"
@@ -16,45 +17,62 @@ roll_template = _.template "roll dice <%=d%> = <strong><%=result%></strong>"
 on_message = (socket, message_text)->
     socket.get "data", (err, data)->
         if data?
-            console.log "Incoming message (%s): %s", data.username, message_text
-            correct = true
-            reply_type = "chat_message"
-            if message_text.indexOf("/roll ") == 0
-                d = message_text.slice(6).replace RegExp(" ", "g"), ""
-                result = dice.rollDie d
-                if result >= 0
-                    message_text = roll_template
-                        d: d
-                        result: result
-                    reply_type = "event"
-                else
-                    correct = false
-            else        
-                if message_text.indexOf("/me ") == 0
-                    reply_type = "event"
-                    message_text = message_text.slice(4)
-                    
-            if correct
-                message =
-                    text: message_text
-                    username: data.username
-                    room: data.room
-                    timestamp: dateFormat(new Date(), df)
-                socket.all.in(data.room).emit reply_type, message
+            Room.findOne name: data.room, (err, room)->
+                if room?
+                    console.log "Incoming message (%s): %s", data.username, message_text
+                    correct = true
+                    reply_type = "chat_message"
+                    if message_text.indexOf("/roll ") == 0
+                        d = message_text.slice(6).replace RegExp(" ", "g"), ""
+                        result = dice.rollDie d
+                        if result >= 0
+                            message_text = roll_template
+                                d: d
+                                result: result
+                            reply_type = "event"
+                        else
+                            correct = false
+                    else        
+                        if message_text.indexOf("/me ") == 0
+                            reply_type = "event"
+                            message_text = message_text.slice(4)
+                            
+                    if correct
+                        User.findOne _id: room.master, (err, user)->
+                            if user?
+                                if data.username == user.name
+                                    data.username = "<span class='master'>"+data.username+'</span>'
+                                message =
+                                    text: message_text
+                                    username: data.username
+                                    room: data.room
+                                    timestamp: dateFormat(new Date(), df)
+                                socket.broadcast.to(data.room).emit reply_type, message
+                                message.username = "<span class='you'>You</span>"
+                                socket.emit reply_type, message
     
 on_connect = (socket, data) ->
     User.findOne _id: data.user, (err, user)->
         if user?
-            console.log "New user for %s. Username: %s", socket.id, user.name
-            console.log "Auth data: ", data
-            data.username = user.name
-            socket.join(data.room)
-            socket.set "data", data
-            data.timestamp = dateFormat(new Date(), df)
-            socket.broadcast.to(data.room).emit "new_player", data
-            socket.emit "connected", data
-            pl = _.pluck _.pluck(socket.all.clients(data.room), 'store'), 'data'
-            socket.emit "players", pl[0]
+            Room.findOne name: data.room, (err, room)->
+                if room?
+                    console.log "New user for %s. Username: %s", socket.id, user.name
+                    console.log "Auth data: ", data
+                    data.username = user.name
+                    data.user_id = user._id
+                    socket.join(data.room)
+                    socket.set "data", data
+                    data.timestamp = dateFormat(new Date(), df)
+                    if room.master.toHexString() == user._id.toHexString()
+                        data.username = "<span class='master'>"+data.username+'</span>'
+                    socket.broadcast.to(data.room).emit "new_player", data
+                    socket.emit "connected", data
+                    pl = _.pluck _.pluck(socket.all.clients(data.room), 'store'), 'data'
+                    #players = []
+                    #_.each pl[0], (e,i)->
+                        #if room.master == user._id
+                        
+                    socket.emit "players", pl[0]
         
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id
