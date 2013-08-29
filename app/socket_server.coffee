@@ -1,5 +1,9 @@
 _ = require("underscore")
 dateFormat = require('dateformat')
+mongoose = require 'mongoose'
+
+User = mongoose.model 'User'
+
 dice = require('./dice')
 console.log "Roll 2d5+8 = %d", dice.rollDie "2d5+8"
 
@@ -12,9 +16,9 @@ roll_template = _.template "roll dice <%=d%> = <strong><%=result%></strong>"
 on_message = (socket, message_text)->
     socket.get "data", (err, data)->
         if data?
+            console.log "Incoming message (%s): %s", data.username, message_text
             correct = true
             reply_type = "chat_message"
-            console.log message_text, message_text.indexOf("/roll "), message_text.indexOf("/me ")
             if message_text.indexOf("/roll ") == 0
                 d = message_text.slice(6).replace RegExp(" ", "g"), ""
                 result = dice.rollDie d
@@ -39,15 +43,18 @@ on_message = (socket, message_text)->
                 socket.all.in(data.room).emit reply_type, message
     
 on_connect = (socket, data) ->
-    console.log "New user for %s. Username: %s", socket.id, data.username
-    console.log "Auth data: ", data
-    socket.join(data.room)
-    socket.set "data", data
-    data.timestamp = dateFormat(new Date(), df)
-    socket.broadcast.to(data.room).emit "new_player", data
-    socket.emit "connected", data
-    pl = _.pluck _.pluck(socket.all.clients(data.room), 'store'), 'data'
-    socket.emit "players", pl[0]
+    User.findOne _id: data.user, (err, user)->
+        if user?
+            console.log "New user for %s. Username: %s", socket.id, user.name
+            console.log "Auth data: ", data
+            data.username = user.name
+            socket.join(data.room)
+            socket.set "data", data
+            data.timestamp = dateFormat(new Date(), df)
+            socket.broadcast.to(data.room).emit "new_player", data
+            socket.emit "connected", data
+            pl = _.pluck _.pluck(socket.all.clients(data.room), 'store'), 'data'
+            socket.emit "players", pl[0]
         
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id

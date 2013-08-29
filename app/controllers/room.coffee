@@ -7,8 +7,8 @@ User = mongoose.model 'User'
 # List users
 #
 exports.main = (req, res) ->
-  res.render 'room/main',
-    boom: "boom"
-  return
+    res.render 'room/main',
+        boom: "boom"
+    return
 
 

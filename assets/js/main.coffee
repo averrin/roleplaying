@@ -43,7 +43,7 @@ $(document).ready ->
         
     root.connect = ()->
         root.socket.emit "connect",
-            username: $(".username").data "username"
+            user: $(".user").data "user"
             room: "Main"
       
     root.socket.on "plz_connect", ->
