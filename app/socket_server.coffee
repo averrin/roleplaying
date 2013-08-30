@@ -44,6 +44,18 @@ master_event = (message)->
     message.text = message.text.slice(7)
     return message
 
+
+help = (message, is_master)->
+    message.event_type = "system_message"
+    message.text = "<strong>Command list:</strong><ul>"+
+        "<li><strong>/me</strong> blah-blah &mdash; you do blah-blah as event</li>"+
+        "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
+    if is_master
+        message.text += "<li><strong>/event</strong> blah-blah &mdash; show blah-blah as global event</li>"
+    message.text += "</ul>"
+    message.allow_send = false
+    return message
+
 on_message = (socket, message_text)->
     socket.get "data", (err, data)->
         unless data?
@@ -74,6 +86,9 @@ on_message = (socket, message_text)->
             if message.text.indexOf("/event ") == 0
                 if data.user.name == room.master.name
                     message = master_event message
+                    
+            if message.text.indexOf("/help") == 0
+                message = help message, data.user.name == room.master.name
             
             
                 
@@ -121,6 +136,7 @@ on_connect = (socket, data) ->
                     socket.broadcast.to(data.room.name).emit "new_player",
                         timestamp: now
                         username: data.displayname
+                        user_id: user._id
                         room: room.name
                     socket.set "data", data
                     socket.emit "connected",
