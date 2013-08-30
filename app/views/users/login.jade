@@ -1,23 +1,22 @@
-extends ../layout
+extends base
 
 block title
   | Login
 
-block content
+block main
   h2 Please log in
 
   if message != ''
     .alert.alert-error= message
 
   form(action='/login', method='post')
-
-    p
+    .form-group
       label(for='username') Username<br />
-      input#username(name='username', type='text')
+      input#username.form-control(name='username', type='text')
 
-    p
+    .form-group
       label(for='username') Password<br />
-      input#password(name='password', type='password')
+      input#password.form-control(name='password', type='password')
   
-    p
+    .form-group
       input.btn.btn-primary(type='submit', value='Log in')

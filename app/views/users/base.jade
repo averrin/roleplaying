@@ -6,12 +6,13 @@ block content
       .col-8
         block main
       .col-4
-        .well.sidebar-nav
-          ul.nav.nav-list
-            li
-              a(href='/users/') List users
-            li
-              a(href='/users/new') New user
+        if req.user
+            .well.sidebar-nav
+              ul.nav.nav-list
+                li
+                  a(href='/users/') List users
+                li
+                  a(href='/users/new') New user
 
 
   

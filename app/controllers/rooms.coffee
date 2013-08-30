@@ -23,19 +23,15 @@ exports.new = (req, res) ->
 # Create new room
 #
 exports.create = (req, res) ->
-    console.log "REQ: ", req.body
     new_room = req.body
-    User.findOne name: new_room.master, (err, user)->
-        if user?
-            new_room.master = user._id
-            room = new Room new_room
-            room.save (err) ->
-                if err
-                  res.render 'rooms/new',
-                    errors: err.errors
-                    room: room
-                res.redirect '/rooms'
-            return
+    new_room.master = req.user._id
+    room = new Room new_room
+    room.save (err) ->
+        if err
+          res.render 'rooms/new',
+            errors: err.errors
+            room: room
+        res.redirect '/rooms'
     return
 
 exports.show = (req, res) ->

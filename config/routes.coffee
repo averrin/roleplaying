@@ -30,9 +30,9 @@ module.exports = (app, config, passport, auth) ->
 
   # room routes
   app.get '/', rooms.index
-  app.get '/rooms', rooms.manage
+  app.get '/rooms', auth.requiresLogin, rooms.manage
   app.get '/rooms/new', auth.requiresLogin, rooms.new
-  app.get '/rooms/:roomName', rooms.main
+  app.get '/rooms/:roomName', auth.requiresLogin, rooms.main
   app.post '/rooms', auth.requiresLogin, rooms.create
   app.get '/rooms/:roomId/edit', auth.requiresLogin, rooms.edit
   app.put '/rooms/:roomId', auth.requiresLogin, rooms.update

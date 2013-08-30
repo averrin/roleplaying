@@ -7,8 +7,15 @@ block content
   
     .container
         .row
-            button#new_room.btn.btn-primary.pull-right Add room
+            h3
+                | Rooms
+                if req.user
+                    button#new_room.btn.btn-primary.pull-right Add room
         each room in all_rooms
-            .row
-                p= room.name + " (" + room.master.name + ")"
-                    button.btn.btn-default.join_room(data-room=room.name) Join
+            .room.row.well 
+                .col-11
+                    .room_title= room.name
+                    != 'Master: <em>' + room.master.name + '</em>'
+                .col-1
+                    if req.user
+                        button.join_room.btn.btn-default.pull-right(data-room=room.name) Join

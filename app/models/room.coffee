@@ -16,8 +16,11 @@ Schema = mongoose.Schema
 RoomSchema = new Schema
   name:
     type: String
+    required: true,
+    unique: true
   master:
-    { type: Schema.Types.ObjectId, ref: 'User' }
+    type: Schema.Types.ObjectId
+    ref: 'User'
  
 #
 # Schema statics
@@ -33,9 +36,11 @@ Room = mongoose.model 'Room', RoomSchema
 
 HistorySchema = new Schema
     room:
-        {type: Schema.Types.ObjectId, ref: "room"}
+        type: Schema.Types.ObjectId
+        ref: "room"
     user:
-        { type: Schema.Types.ObjectId, ref: 'User' }
+        type: Schema.Types.ObjectId
+        ref: 'User' 
     event_type:
         type: String
     timestamp:

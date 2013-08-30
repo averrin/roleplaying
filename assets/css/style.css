@@ -11,3 +11,6 @@ article.system_event{color:#808080}
 .master{color:#bb62cc}
 .you{color:#008000}
 #chat_box{max-height:775px;overflow-y:auto;margin-bottom:54px}
+.room{margin-top:4px;margin-bottom:4px}
+.room_title{font-weight:bold;font-size:15pt}
+.join_room{margin-top:6px}
