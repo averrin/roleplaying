@@ -14,61 +14,85 @@ df = "HH:MM:ss"
 
 roll_template = _.template "roll dice <%=d%> = <strong><%=result%></strong>"
 
+roll_die = (message)->
+    d = message.text.slice(6).replace RegExp(" ", "g"), ""
+    try
+        result = dice.rollDie d
+    catch e
+        result = NaN
+    if result >= 0
+        message.text = roll_template
+            d: d
+            result: result
+        message.event_type = "event"
+    else
+        message.event_type = "system_message"
+        message.text = "Wrong /roll format"
+        message.allow_send = false
+        
+    return message
+    
+    
+player_event = (message)->
+    message.event_type = "event"
+    message.text = message_text.slice(4)
+    return message
+
 
 on_message = (socket, message_text)->
     socket.get "data", (err, data)->
-        if data?
-            Room.findOne name: data.room, (err, room)->
-                if room?
-                    console.log "Incoming message (%s): %s", data.username, message_text
-                    allow_send = true
-                    reply_type = "chat_message"
-                    if message_text.indexOf("/roll ") == 0
-                        d = message_text.slice(6).replace RegExp(" ", "g"), ""
-                        try
-                            result = dice.rollDie d
-                        catch e
-                            console.log e
-                            result = NaN
-                        if result >= 0
-                            message_text = roll_template
-                                d: d
-                                result: result
-                            reply_type = "event"
-                        else
-                            reply_type = "system_message"
-                            message_text = "Wrong /roll format"
-                            allow_send = false
-                    else        
-                        if message_text.indexOf("/me ") == 0
-                            reply_type = "event"
-                            message_text = message_text.slice(4)
-                            
-                    message =
-                        text: message_text
-                        username: data.username
-                        room: data.room
-                        timestamp: dateFormat(new Date(), df)
+        unless data?
+            console.log "Cant fetch data from socket"
+            return
+        
+        Room.findOne(name: data.room).populate("master").exec (err, room)->
+            unless room?
+                console.log "Wrong room"
+                return
+                
+            message =
+                text: message_text
+                username: data.username
+                room: data.room
+                timestamp: dateFormat(new Date(), df)
+                allow_send: true
+                event_type: "chat_message"
+            
+            console.log "Incoming message (%s): %s", data.username, message_text
+            
+            if message.text.indexOf("/roll ") == 0
+                message = roll_die message
+            
+            if message_text.indexOf("/me ") == 0
+                message = player_event message
+            
+            
+                
+            socket.emit message.event_type, 
+                text: message.text
+                username: "<span class='you'>You</span>"
+                room: message.room
+                timestamp: message.timestamp
+            
+            unless message.allow_send
+                return
+            
+            history = new History
+                room: room._id
+                user: data.user_id
+                timestamp: new Date()
+                event_type: message.event_type
+                text: message.text
+            console.log history
+            history.save (err)->
+                if err?
+                    console.log err
+                else
+                    if data.username == room.master.name
+                        message.username = "<span class='master'>"+data.username+'</span>'
+                    socket.broadcast.to(data.room).emit message.event_type, message
+                                
                     
-                    if allow_send
-                        User.findOne _id: room.master, (err, master)->
-                            if master?
-                                history = new History
-                                    room: room._id
-                                    user: data.user_id
-                                    timestamp: new Date()
-                                    event_type: reply_type
-                                    text: message_text
-                                console.log history
-                                history.save (err)->
-                                    if err?
-                                        console.log err
-                                    else
-                                        if data.username == master.name
-                                            message.username = "<span class='master'>"+data.username+'</span>'
-                                        socket.broadcast.to(data.room).emit reply_type, message
-                    message.username = "<span class='you'>You</span>"
-                    socket.emit reply_type, message
                                 
     
 on_connect = (socket, data) ->
@@ -80,6 +104,7 @@ on_connect = (socket, data) ->
                     console.log "Auth data: ", data
                     data.username = user.name
                     data.user_id = user._id
+                    data.room_id = room._id
                     socket.join(data.room)
                     socket.set "data", data
                     data.timestamp = dateFormat(new Date(), df)
@@ -97,9 +122,28 @@ on_connect = (socket, data) ->
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id
     socket.get "data", (err, data)->
-        if data?
-            data.timestamp = dateFormat(new Date(), df)
-            socket.broadcast.to(data.room).emit "player_leave", data
+        unless data?
+            return
+        
+        data.timestamp = dateFormat(new Date(), df)
+        socket.broadcast.to(data.room).emit "player_leave", data
+            
+            
+on_get_history = (socket)->
+    socket.get "data", (err, data)->
+        unless data?
+            return
+        history_list = []
+        History.find(room: data.room_id).populate("user").exec (err, history)->
+            unless history
+                return
+            _.each history, (e, i)->
+                history_list.push
+                    timestamp: dateFormat(e.timestamp, df)
+                    event_type: e.event_type
+                    username: e.user.name
+                    text: e.text
+            socket.emit "history", history_list
 
 
 exports.init = (io)->
@@ -108,6 +152,7 @@ exports.init = (io)->
         console.log "Client Connected. ID: %s", socket.id
         socket.all = io.sockets
         socket.on "message", (message_text) -> on_message socket, message_text
+        socket.on "request_history", -> on_get_history socket
         socket.on "connect", (data) -> on_connect socket, data
         socket.on "disconnect", -> on_disconnect socket
         

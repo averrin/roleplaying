@@ -1,41 +1,56 @@
 root = exports ? this
 
-root.user_list_template = _.template "<li data-user='<%=user_id%>'><%=username%></li>"
-root.user_join_template = _.template "<article class='system_event'>
+root.templates = 
+    user_in_list: _.template "<li data-user='<%=user_id%>'><%=username%></li>"
+    user_join: _.template "<article class='system_event'>
     <em><strong><%=username%></strong> join to our room</em>
     </article>"
-root.user_left_template = _.template "<article class='system_event'>
+    user_left: _.template "<article class='system_event'>
     <em><strong><%=username%></strong> left our room</em>
     </article>"
-root.new_message_template = _.template "<article class='message'><small class='timestamp'>[<%=timestamp%>]</small>
+    chat_message: _.template "<article class='message'><small class='timestamp'>[<%=timestamp%>]</small>
     <strong><%=username%>:</strong> <%=text%>
     </article>"
     
-root.new_event_template = _.template "<article class='event'>
+    event: _.template "<article class='event'>
     <em><strong><%=username%></strong> <%=text%></em>
     </article>"
     
-root.new_system_template = _.template "<article class='system_event'>
+    master_event: _.template "<article class='master_event'>
+    <em><%=text%></em>
+    </article>"
+    
+    system_event: _.template "<article class='system_event'>
     <em><%=text%></em>
     </article>"
 
 root.add_user_to_list = (user) ->
-    $("#player_list").append root.user_list_template user
-    $("#chat_box").append root.user_join_template user
+    $("#player_list").append root.templates["user_in_list"] user
+    $("#chat_box").append root.templates["user_join"] user
     
 root.remove_user_from_list = (user) ->
     $("#player_list").html ""
     $("#player_list li[data-user='"+user.user_id+"']").remove()
-    $("#chat_box").append root.user_left_template user
+    $("#chat_box").append root.templates["user_left"] user
     
 root.add_message = (msg) ->
-    $("#chat_box").append root.new_message_template msg
+    $("#chat_box").append root.templates["chat_message"] msg
     
 root.add_event = (event) ->
-    $("#chat_box").append root.new_event_template event
+    $("#chat_box").append root.templates["event"] event
     
 root.add_system = (event) ->
-    $("#chat_box").append root.new_system_template event
+    $("#chat_box").append root.templates["system_event"] event
+    
+root.request_history = ()->
+    root.socket.emit "request_history",
+        user: $("#user").data "user"
+        room: $("#room").data "room" 
+        
+root.show_history = (history)->
+    _.each history.reverse(), (e,i)->
+        h = root.templates[e.event_type] e
+        $("#chat_box").prepend h
 
 $(document).ready ->
 
@@ -44,8 +59,18 @@ $(document).ready ->
     root.socket.on "server_message", (data) ->
         console.log data
         
+    root.socket.on "history", (data) ->
+        console.log "Recieved history", data
+        root.show_history data
+        
     root.socket.on "connected", (data)->
         $(".loader").hide()
+        $("#request_history").hide()
+        $("#request_history").off()
+        $("#chat_box").prepend "<a href='javascript://' id='request_history'>Request history</a>"
+        $("#request_history").on "click", (ev)->
+            root.request_history()
+            $("#request_history").hide()
         $("#chat_input").attr("disabled", null)
         
     root.connect = ()->
@@ -88,4 +113,5 @@ $(document).ready ->
         if $("#chat_input").val() != ''
             root.socket.emit "message", $("#chat_input").val()
             $("#chat_input").val('')
+            
         
