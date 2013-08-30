@@ -4,6 +4,7 @@ mongoose = require 'mongoose'
 
 User = mongoose.model 'User'
 Room = mongoose.model 'Room'
+History = mongoose.model 'History'
 
 dice = require('./dice')
 console.log "Roll 2d5+8 = %d", dice.rollDie "2d5+8"
@@ -20,36 +21,55 @@ on_message = (socket, message_text)->
             Room.findOne name: data.room, (err, room)->
                 if room?
                     console.log "Incoming message (%s): %s", data.username, message_text
-                    correct = true
+                    allow_send = true
                     reply_type = "chat_message"
                     if message_text.indexOf("/roll ") == 0
                         d = message_text.slice(6).replace RegExp(" ", "g"), ""
-                        result = dice.rollDie d
+                        try
+                            result = dice.rollDie d
+                        catch e
+                            console.log e
+                            result = NaN
                         if result >= 0
                             message_text = roll_template
                                 d: d
                                 result: result
                             reply_type = "event"
                         else
-                            correct = false
+                            reply_type = "system_message"
+                            message_text = "Wrong /roll format"
+                            allow_send = false
                     else        
                         if message_text.indexOf("/me ") == 0
                             reply_type = "event"
                             message_text = message_text.slice(4)
                             
-                    if correct
-                        User.findOne _id: room.master, (err, user)->
-                            if user?
-                                if data.username == user.name
-                                    data.username = "<span class='master'>"+data.username+'</span>'
-                                message =
+                    message =
+                        text: message_text
+                        username: data.username
+                        room: data.room
+                        timestamp: dateFormat(new Date(), df)
+                    
+                    if allow_send
+                        User.findOne _id: room.master, (err, master)->
+                            if master?
+                                history = new History
+                                    room: room._id
+                                    user: data.user_id
+                                    timestamp: new Date()
+                                    event_type: reply_type
                                     text: message_text
-                                    username: data.username
-                                    room: data.room
-                                    timestamp: dateFormat(new Date(), df)
-                                socket.broadcast.to(data.room).emit reply_type, message
-                                message.username = "<span class='you'>You</span>"
-                                socket.emit reply_type, message
+                                console.log history
+                                history.save (err)->
+                                    if err?
+                                        console.log err
+                                    else
+                                        if data.username == master.name
+                                            message.username = "<span class='master'>"+data.username+'</span>'
+                                        socket.broadcast.to(data.room).emit reply_type, message
+                    message.username = "<span class='you'>You</span>"
+                    socket.emit reply_type, message
+                                
     
 on_connect = (socket, data) ->
     User.findOne _id: data.user, (err, user)->

@@ -17,7 +17,7 @@ RoomSchema = new Schema
   name:
     type: String
   master:
-    type: Schema.Types.ObjectId
+    { type: Schema.Types.ObjectId, ref: 'User' }
  
 #
 # Schema statics
@@ -30,3 +30,17 @@ RoomSchema.statics =
     return
 
 Room = mongoose.model 'Room', RoomSchema
+
+HistorySchema = new Schema
+    room:
+        {type: Schema.Types.ObjectId, ref: "room"}
+    user:
+        { type: Schema.Types.ObjectId, ref: 'User' }
+    event_type:
+        type: String
+    timestamp:
+        type: Date
+    text:
+        type: String
+        
+History = mongoose.model 'History', HistorySchema

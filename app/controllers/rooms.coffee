@@ -27,7 +27,7 @@ exports.create = (req, res) ->
     new_room = req.body
     User.findOne name: new_room.master, (err, user)->
         if user?
-            new_room.master = user
+            new_room.master = user._id
             room = new Room new_room
             room.save (err) ->
                 if err
@@ -81,8 +81,8 @@ exports.destroy = (req, res) ->
 # Manage rooms
 #
 exports.manage = (req, res) ->
-  Room.list (err, rooms_list) ->
-    console.log rooms_list
+  room_list = Room.find()
+  room_list.populate("master").exec (err, rooms_list) ->
     res.render 'rooms/manage',
       all_rooms: rooms_list
       message: req.flash 'notice'
@@ -92,8 +92,8 @@ exports.manage = (req, res) ->
 # Rooms index
 #
 exports.index = (req, res) ->
-  Room.list (err, rooms_list) ->
-    console.log rooms_list
+  room_list = Room.find()
+  room_list.populate("master").exec (err, rooms_list) ->
     res.render 'rooms/index',
       all_rooms: rooms_list
   return

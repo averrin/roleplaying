@@ -10,5 +10,5 @@ block content
             button#new_room.btn.btn-primary.pull-right Add room
         each room in all_rooms
             .row
-                p= room.name + " (" + room.master + ")"
+                p= room.name + " (" + room.master.name + ")"
                     button.btn.btn-default.join_room(data-room=room.name) Join

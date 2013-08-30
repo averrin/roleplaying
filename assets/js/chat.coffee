@@ -14,6 +14,10 @@ root.new_message_template = _.template "<article class='message'><small class='t
 root.new_event_template = _.template "<article class='event'>
     <em><strong><%=username%></strong> <%=text%></em>
     </article>"
+    
+root.new_system_template = _.template "<article class='system_event'>
+    <em><%=text%></em>
+    </article>"
 
 root.add_user_to_list = (user) ->
     $("#player_list").append root.user_list_template user
@@ -29,6 +33,9 @@ root.add_message = (msg) ->
     
 root.add_event = (event) ->
     $("#chat_box").append root.new_event_template event
+    
+root.add_system = (event) ->
+    $("#chat_box").append root.new_system_template event
 
 $(document).ready ->
 
@@ -56,6 +63,10 @@ $(document).ready ->
     root.socket.on "event", (data)->
         console.log "New event", data
         root.add_event data
+        
+    root.socket.on "system_message", (data)->
+        console.log "New system event", data
+        root.add_system data
         
     root.socket.on "new_player", (data)->
         console.log "New player", data

@@ -18,8 +18,8 @@ block main
     each room in all_rooms
       tr
         td= room.name
-        td= room.master
+        td= room.master.name
         td
-          a(href='/room/#{ room.id }/edit') edit
+          a(href='/rooms/#{ room.id }/edit') edit
           |  | 
-          a(href='/articles/#{ room.id }/destroy', onclick='return confirm("Are you sure you want to delete this?") ? true : false') delete
+          a(href='/rooms/#{ room.id }/destroy', onclick='return confirm("Are you sure you want to delete this?") ? true : false') delete

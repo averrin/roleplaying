@@ -25,5 +25,6 @@ exports.rollDie = (diceString) ->
         roll matches[1], matches[2], 0, 0
       else
         roll matches[1], matches[2], matches[3], matches[4]
-    #else
+    else
+      return NaN
       #console.log matches.length
