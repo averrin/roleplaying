@@ -20,7 +20,7 @@ root.templates =
     <em><%=text%></em>
     </article>"
     
-    system_event: _.template "<article class='system_event'>
+    system_message: _.template "<article class='system_event'>
     <em><%=text%></em>
     </article>"
 
@@ -33,14 +33,10 @@ root.remove_user_from_list = (user) ->
     $("#player_list li[data-user='"+user.user_id+"']").remove()
     $("#chat_box").append root.templates["user_left"] user
     
-root.add_message = (msg) ->
-    $("#chat_box").append root.templates["chat_message"] msg
-    
-root.add_event = (event) ->
-    $("#chat_box").append root.templates["event"] event
-    
-root.add_system = (event) ->
-    $("#chat_box").append root.templates["system_event"] event
+root.add_to_chat = (msg) ->
+    chat = $("#chat_box")
+    chat.append root.templates[msg.event_type] msg
+    chat.animate scrollTop: chat.prop("scrollHeight"), 500
     
 root.request_history = ()->
     root.socket.emit "request_history",
@@ -51,6 +47,28 @@ root.show_history = (history)->
     _.each history.reverse(), (e,i)->
         h = root.templates[e.event_type] e
         $("#chat_box").prepend h
+    chat.animate scrollTop: chat.prop("scrollHeight"), 500
+        
+        
+root.update_player_list = (players)->
+    $("#player_list").html ""
+    _.each players, (e,i)->
+        root.add_user_to_list e
+        
+root.connect = ()->
+    root.socket.emit "connect",
+        user: $("#user").data "user"
+        room: $("#room").data "room"
+        
+root.routes = 
+    plz_connect: root.connect
+    chat_message: root.add_to_chat
+    event: root.add_to_chat
+    master_event: root.add_to_chat
+    system_message: root.add_to_chat
+    new_player: root.add_user_to_list
+    player_leave: root.remove_user_from_list
+    players: root.update_player_list
 
 $(document).ready ->
 
@@ -65,6 +83,7 @@ $(document).ready ->
         
     root.socket.on "connected", (data)->
         $(".loader").hide()
+        $("#player_list").html ""
         $("#request_history").hide()
         $("#request_history").off()
         $("#chat_box").prepend "<a href='javascript://' id='request_history'>Request history</a>"
@@ -73,39 +92,10 @@ $(document).ready ->
             $("#request_history").hide()
         $("#chat_input").attr("disabled", null)
         
-    root.connect = ()->
-        root.socket.emit "connect",
-            user: $("#user").data "user"
-            room: $("#room").data "room"
       
-    root.socket.on "plz_connect", ->
-        root.connect()
-    
-    root.socket.on "chat_message", (data)->
-        console.log "New message", data
-        root.add_message data
-        
-    root.socket.on "event", (data)->
-        console.log "New event", data
-        root.add_event data
-        
-    root.socket.on "system_message", (data)->
-        console.log "New system event", data
-        root.add_system data
-        
-    root.socket.on "new_player", (data)->
-        console.log "New player", data
-        root.add_user_to_list data
-        
-    root.socket.on "player_leave", (data)->
-        console.log "Player", data, "left room"
-        root.remove_user_from_list data
-        
-    root.socket.on "players", (data)->
-        console.log "Players list", data
-        _.each data, (e,i)->
-            console.log e
-            root.add_user_to_list e
+    _.each _.keys(root.routes), (e,i)->
+        root.socket.on e, (data)->
+            root.routes[e] data
             
             
     $("#chat_form").on "submit", (ev)->

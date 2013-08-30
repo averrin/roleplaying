@@ -35,9 +35,14 @@ roll_die = (message)->
     
 player_event = (message)->
     message.event_type = "event"
-    message.text = message_text.slice(4)
+    message.text = message.text.slice(4)
     return message
 
+
+master_event = (message)->
+    message.event_type = "master_event"
+    message.text = message.text.slice(7)
+    return message
 
 on_message = (socket, message_text)->
     socket.get "data", (err, data)->
@@ -45,26 +50,30 @@ on_message = (socket, message_text)->
             console.log "Cant fetch data from socket"
             return
         
-        Room.findOne(name: data.room).populate("master").exec (err, room)->
+        Room.findOne(_id: data.room._id).populate("master").exec (err, room)->
             unless room?
                 console.log "Wrong room"
                 return
                 
             message =
                 text: message_text
-                username: data.username
-                room: data.room
+                username: data.displayname
+                room: data.room.name
                 timestamp: dateFormat(new Date(), df)
                 allow_send: true
                 event_type: "chat_message"
             
-            console.log "Incoming message (%s): %s", data.username, message_text
+            console.log "Incoming message (%s): %s", data.user.name, message_text
             
             if message.text.indexOf("/roll ") == 0
                 message = roll_die message
             
-            if message_text.indexOf("/me ") == 0
+            if message.text.indexOf("/me ") == 0
                 message = player_event message
+                
+            if message.text.indexOf("/event ") == 0
+                if data.user.name == room.master.name
+                    message = master_event message
             
             
                 
@@ -73,13 +82,14 @@ on_message = (socket, message_text)->
                 username: "<span class='you'>You</span>"
                 room: message.room
                 timestamp: message.timestamp
+                event_type: message.event_type
             
             unless message.allow_send
                 return
             
             history = new History
                 room: room._id
-                user: data.user_id
+                user: data.user._id
                 timestamp: new Date()
                 event_type: message.event_type
                 text: message.text
@@ -88,36 +98,41 @@ on_message = (socket, message_text)->
                 if err?
                     console.log err
                 else
-                    if data.username == room.master.name
-                        message.username = "<span class='master'>"+data.username+'</span>'
-                    socket.broadcast.to(data.room).emit message.event_type, message
+                    socket.broadcast.to(data.room.name).emit message.event_type, message
                                 
                     
                                 
     
 on_connect = (socket, data) ->
+    now = dateFormat(new Date(), df)
     User.findOne _id: data.user, (err, user)->
         if user?
             Room.findOne name: data.room, (err, room)->
                 if room?
                     console.log "New user for %s. Username: %s", socket.id, user.name
                     console.log "Auth data: ", data
-                    data.username = user.name
-                    data.user_id = user._id
-                    data.room_id = room._id
-                    socket.join(data.room)
-                    socket.set "data", data
-                    data.timestamp = dateFormat(new Date(), df)
+                    data.user = user
+                    data.room = room
+                    socket.join(data.room.name)
                     if room.master.toHexString() == user._id.toHexString()
-                        data.username = "<span class='master'>"+data.username+'</span>'
-                    socket.broadcast.to(data.room).emit "new_player", data
-                    socket.emit "connected", data
-                    pl = _.pluck _.pluck(socket.all.clients(data.room), 'store'), 'data'
-                    #players = []
-                    #_.each pl[0], (e,i)->
-                        #if room.master == user._id
-                        
-                    socket.emit "players", pl[0]
+                        data.displayname = "<span class='master'>"+data.user.name+'</span>'
+                    else
+                        data.displayname = data.user.name
+                    socket.broadcast.to(data.room.name).emit "new_player",
+                        timestamp: now
+                        username: data.displayname
+                        room: room.name
+                    socket.set "data", data
+                    socket.emit "connected",
+                        timestamp: now
+                    pl = _.pluck _.pluck(socket.all.clients(data.room.name), 'store'), 'data'
+                    players = []
+                    _.each pl[0], (e,i)->
+                        players.push
+                            user_id: e.user._id
+                            username: e.displayname
+                            
+                    socket.emit "players", players
         
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id
@@ -125,8 +140,11 @@ on_disconnect = (socket)->
         unless data?
             return
         
-        data.timestamp = dateFormat(new Date(), df)
-        socket.broadcast.to(data.room).emit "player_leave", data
+        timestamp = dateFormat(new Date(), df)
+        socket.broadcast.to(data.room.name).emit "player_leave",
+            timestamp: timestamp
+            username: data.displayname
+            
             
             
 on_get_history = (socket)->
@@ -134,7 +152,7 @@ on_get_history = (socket)->
         unless data?
             return
         history_list = []
-        History.find(room: data.room_id).populate("user").exec (err, history)->
+        History.find(room: data.room._id).populate("user").exec (err, history)->
             unless history
                 return
             _.each history, (e, i)->
