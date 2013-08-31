@@ -1,6 +1,6 @@
 root = exports ? this
 
-root.templates = 
+root.templates =
     user_in_list: _.template "<li data-user='<%=user_id%>'><%=username%></li>"
     user_join: _.template "<article class='system_event'>
     <em><strong><%=username%></strong> join to our room</em>
@@ -41,7 +41,7 @@ root.add_to_chat = (msg) ->
 root.request_history = ()->
     root.socket.emit "request_history",
         user: $("#user").data "user"
-        room: $("#room").data "room" 
+        room: $("#room").data "room"
         
 root.show_history = (history)->
     _.each history.reverse(), (e,i)->
@@ -60,7 +60,12 @@ root.connect = ()->
         user: $("#user").data "user"
         room: $("#room").data "room"
         
-root.routes = 
+root.disconnect = (data)->
+    if data.username == $("#user").data("username")
+        console.log "You were kicked"
+        window.location = '/'
+
+root.routes =
     plz_connect: root.connect
     chat_message: root.add_to_chat
     event: root.add_to_chat
@@ -69,6 +74,7 @@ root.routes =
     new_player: root.add_user_to_list
     player_leave: root.remove_user_from_list
     players: root.update_player_list
+    disconnect: root.disconnect
 
 $(document).ready ->
 

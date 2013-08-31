@@ -44,7 +44,7 @@ html(lang='en')
 
         a.navbar-brand(href='/') RPG Workshop
         if req.user
-          p.navbar-text.pull-right#user(data-user="#{req.user._id}")
+          p.navbar-text.pull-right#user(data-user="#{req.user._id}", data-username="#{req.user.name}")
             | Welcome, #{req.user.name}
             | | 
             a(href='/logout') logout
@@ -57,8 +57,8 @@ html(lang='en')
         ul.nav.navbar-nav
           li: a(href='/') Home
           if req.user
-            li: a(href='/users/') Users
-            li: a(href='/rooms/') Play rooms
+            //li: a(href='/users/') Users
+            //li: a(href='/rooms/') Play rooms
               
     block content
     

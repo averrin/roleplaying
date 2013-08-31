@@ -44,6 +44,11 @@ master_event = (message)->
     message.text = message.text.slice(7)
     return message
 
+master_as = (message)->
+    words = message.text.split ' '
+    message.username = "<span class='npc'>" + words[1] + "</span>"
+    message.text = words.slice(2).join " "
+    return message
 
 help = (message, is_master)->
     message.event_type = "system_message"
@@ -52,6 +57,8 @@ help = (message, is_master)->
         "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
     if is_master
         message.text += "<li><strong>/event</strong> blah-blah &mdash; show blah-blah as global event</li>"
+        message.text += "<li><strong>/as</strong> Name blah-blah &mdash; say blah-blah as Name</li>"
+        message.text += "<li><strong>/kick</strong> Player &mdash; kick player from room</li>"
     message.text += "</ul>"
     message.allow_send = false
     return message
@@ -86,15 +93,26 @@ on_message = (socket, message_text)->
             if message.text.indexOf("/event ") == 0
                 if data.user.name == room.master.name
                     message = master_event message
+
+            if message.text.indexOf("/as ") == 0
+                if data.user.name == room.master.name
+                    message = master_as message
                     
             if message.text.indexOf("/help") == 0
                 message = help message, data.user.name == room.master.name
             
-            
-                
-            socket.emit message.event_type, 
+            if message.text.indexOf("/kick ") == 0
+                if data.user.name == room.master.name
+                    player = message.text.split(" ").slice(1)[0]
+                    message = kick message, player
+                                    
+            if data.user.name == room.master.name
+                displayname = message.username
+            else
+                displayname = "<span class='you'>You</span>"
+            socket.emit message.event_type,
                 text: message.text
-                username: "<span class='you'>You</span>"
+                username: displayname
                 room: message.room
                 timestamp: message.timestamp
                 event_type: message.event_type
@@ -161,8 +179,12 @@ on_disconnect = (socket)->
             timestamp: timestamp
             username: data.displayname
             
-            
-            
+kick = (message, player)->
+    message.event_type = "disconnect"
+    message.text = player + " was kicked"
+    message.username = player
+    return message
+    
 on_get_history = (socket)->
     socket.get "data", (err, data)->
         unless data?
@@ -179,6 +201,8 @@ on_get_history = (socket)->
                     text: e.text
             socket.emit "history", history_list
 
+on_error = (socket)->
+    console.log err
 
 exports.init = (io)->
     sockets = io.sockets
@@ -190,5 +214,6 @@ exports.init = (io)->
         socket.on "connect", (data) -> on_connect socket, data
         socket.on "disconnect", -> on_disconnect socket
         
+        socket.on "error", (err)-> on_error socket, err
         socket.emit "plz_connect"
                     
