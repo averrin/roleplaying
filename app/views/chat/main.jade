@@ -4,10 +4,13 @@ block title
     | Play room
 
 block main
-    h2#room(data-room=room.name)!= 'Play room <strong>' + room.name + '</strong>'
-    img(src='/img/preloader.gif').loader
+    if is_master
+        p You are Master of this room
     #chat_box
 
 block sidebar
-    h2 Players
     ul#player_list
+
+block status
+    .status(contenteditable="#{is_master}")
+        != room.description

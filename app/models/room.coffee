@@ -21,6 +21,8 @@ RoomSchema = new Schema
   master:
     type: Schema.Types.ObjectId
     ref: 'User'
+  description:
+    type: String
  
 #
 # Schema statics
@@ -40,12 +42,31 @@ HistorySchema = new Schema
         ref: "room"
     user:
         type: Schema.Types.ObjectId
-        ref: 'User' 
+        ref: 'User'
     event_type:
         type: String
     timestamp:
         type: Date
+    displayname:
+        type: String
     text:
         type: String
         
 History = mongoose.model 'History', HistorySchema
+
+
+HeroSchema = new Schema
+    room:
+        type: Schema.Types.ObjectId
+        ref: "room"
+    user:
+        type: Schema.Types.ObjectId
+        ref: 'User'
+    displayname:
+        type: String
+    description:
+        type: String
+    layout: Schema.Types.Mixed
+    settings: Schema.Types.Mixed
+
+Hero = mongoose.model 'Hero', HeroSchema

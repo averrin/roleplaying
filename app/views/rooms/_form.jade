@@ -13,9 +13,14 @@ block main
       label Name
       input.form-control(name='name', type='text', value=room.name)
     
-    //.form-group
-    //  label Master
-    //  input.form-control(name='master', type='text', value=room.master)
+    .form-group
+      label Description
+      textarea.form-control.ckeditor(name='description')
+        != room.description
     
     p
       button.btn.btn-primary(type='submit') Save room
+
+block scripts
+
+    script(defer, src="/ckeditor/ckeditor.js")  

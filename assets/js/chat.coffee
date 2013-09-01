@@ -64,6 +64,11 @@ root.disconnect = (data)->
     if data.username == $("#user").data("username")
         console.log "You were kicked"
         window.location = '/'
+        
+        
+root.room_description = (desc)->
+    $(".status").html desc
+
 
 root.routes =
     plz_connect: root.connect
@@ -75,10 +80,37 @@ root.routes =
     player_leave: root.remove_user_from_list
     players: root.update_player_list
     disconnect: root.disconnect
+    room_description: root.room_description
+    
+    
+root.layout_change = (ev, ui)->
+    layout =
+        chat_widget: gridster.serialize($("#chat_widget"))[0]
+        list_widget: gridster.serialize($("#list_widget"))[0]
+        status_widget: gridster.serialize($("#status_widget"))[0]
+    root.socket.emit "update_layout", layout
 
 $(document).ready ->
+    
+    
+    $(".gridster ul").gridster
+        widget_margins: [4, 4]
+        widget_base_dimensions: [160, 160]
+        draggable:
+            stop: (ev, ui) ->
+                root.layout_change ev, ui
+    root.gridster = $(".gridster ul").gridster().data('gridster')
+    root.gridster.disable()
+    $(".widget_header").on "mouseover", () -> gridster.enable()
+    $(".widget_header").on "mouseout", () -> gridster.disable()
+    
 
     root.socket = io.connect()
+
+    CKEDITOR.on 'instanceReady', ()->
+        CKEDITOR.instances['editor1'].on 'change', ()->
+            root.socket.emit "room_description", $(".status").html()
+
   
     root.socket.on "server_message", (data) ->
         console.log data
@@ -89,14 +121,17 @@ $(document).ready ->
         
     root.socket.on "connected", (data)->
         $(".loader").hide()
+        $(".widgets").show()
         $("#player_list").html ""
         $("#request_history").hide()
         $("#request_history").off()
+        $("#chat_box").prepend "<p>Send <strong>/help</strong> to list commands</p>"
         $("#chat_box").prepend "<a href='javascript://' id='request_history'>Request history</a>"
         $("#request_history").on "click", (ev)->
             root.request_history()
             $("#request_history").hide()
         $("#chat_input").attr("disabled", null)
+        $("#chat_input").focus()
         
       
     _.each _.keys(root.routes), (e,i)->
@@ -110,4 +145,4 @@ $(document).ready ->
             root.socket.emit "message", $("#chat_input").val()
             $("#chat_input").val('')
             
-        
+ 

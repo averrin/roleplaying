@@ -1,13 +1,42 @@
 extends ../layout
 
 block content
-  .row-fluid
-      .col-8
-        block main
-      .col-4
-        block sidebar
-
+  script(defer, src="/ckeditor/ckeditor.js")    
+  script(defer, src="/ckeditor/config.js")
+  img(src='/img/preloader.gif').loader
+  .gridster
+      ul.widgets
+          li#chat_widget.widget(
+            data-col="#{hero.layout.chat_widget.col}",
+            data-row="#{hero.layout.chat_widget.row}",
+            data-sizey="#{hero.layout.chat_widget.size_y}",
+            data-sizex="#{hero.layout.chat_widget.size_x}"
+          )      
+            .widget_header Chat
+            .widget_content
+              block main
+          li#list_widget.widget(
+            data-col="#{hero.layout.list_widget.col}",
+            data-row="#{hero.layout.list_widget.row}",
+            data-sizey="#{hero.layout.list_widget.size_y}",
+            data-sizex="#{hero.layout.list_widget.size_x}"
+          )
+            .widget_header Players
+            .widget_content
+              block sidebar
+          li#status_widget.widget(
+            data-col="#{hero.layout.status_widget.col}",
+            data-row="#{hero.layout.status_widget.row}",
+            data-sizey="#{hero.layout.status_widget.size_y}",
+            data-sizex="#{hero.layout.status_widget.size_x}"
+          )
+            #room.widget_header(data-room=room.name)!= 'Room <strong>' + room.name + '</strong> description'
+            .widget_content
+              block status
+              
   include input_form
 
 block scripts
-  != js('chat')
+
+    != js('vendor/jquery.gridster.min')
+    != js('chat')

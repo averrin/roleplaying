@@ -3,13 +3,42 @@ _ = require 'underscore'
 
 Room = mongoose.model 'Room'
 User = mongoose.model 'User'
+Hero = mongoose.model 'Hero'
 
 
 exports.main = (req, res) ->
     room = req.room
-    res.render 'chat/main',
-        room: room
-    return
+    is_master = room.master.equals req.user._id
+    Hero.findOne user: req.user._id, (err, hero)->
+        unless hero
+            hero = new Hero
+                user: req.user._id
+                room: req.room._id
+                displayname: req.user.name
+                layout:
+                    chat_widget:
+                        col: 1
+                        row: 2
+                        size_x: 4
+                        size_y: 2
+                    list_widget:
+                        col: 5
+                        row: 1
+                        size_x: 2
+                        size_y: 2
+                    status_widget:
+                        col: 1
+                        row: 1
+                        size_x: 4
+                        size_y: 1
+                
+            hero.save (err)->
+                console.log err, "Hero saved"
+        res.render 'chat/main',
+            room: room
+            is_master: is_master
+            hero: hero
+        return
 
 #
 # New room form

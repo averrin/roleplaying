@@ -3,6 +3,7 @@ dateFormat = require('dateformat')
 mongoose = require 'mongoose'
 
 User = mongoose.model 'User'
+Hero = mongoose.model 'Hero'
 Room = mongoose.model 'Room'
 History = mongoose.model 'History'
 
@@ -126,6 +127,7 @@ on_message = (socket, message_text)->
                 timestamp: new Date()
                 event_type: message.event_type
                 text: message.text
+                displayname: message.username
             console.log history
             history.save (err)->
                 if err?
@@ -197,12 +199,37 @@ on_get_history = (socket)->
                 history_list.push
                     timestamp: dateFormat(e.timestamp, df)
                     event_type: e.event_type
-                    username: e.user.name
+                    username: e.displayname
                     text: e.text
             socket.emit "history", history_list
 
 on_error = (socket)->
     console.log err
+    
+on_room_description = (socket, desc)->
+    socket.get "data", (err, data)->
+        unless data?
+            return
+
+        Room.update
+            _id: data.room._id
+        ,
+            $set:
+                description: desc
+        , (e, n)->
+            socket.broadcast.emit "room_description", desc
+    
+on_update_layout = (socket, layout)->
+    socket.get "data", (err, data)->
+        unless data?
+            return
+            
+        Hero.update user: data.user._id,
+            $set:
+                layout: layout
+            , (e, n)->
+                console.log e, n, "layout updated"
+    
 
 exports.init = (io)->
     sockets = io.sockets
@@ -212,6 +239,8 @@ exports.init = (io)->
         socket.on "message", (message_text) -> on_message socket, message_text
         socket.on "request_history", -> on_get_history socket
         socket.on "connect", (data) -> on_connect socket, data
+        socket.on "update_layout", (data) -> on_update_layout socket, data
+        socket.on "room_description", (data) -> on_room_description socket, data
         socket.on "disconnect", -> on_disconnect socket
         
         socket.on "error", (err)-> on_error socket, err

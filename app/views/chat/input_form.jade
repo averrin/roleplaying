@@ -2,3 +2,7 @@
     form#chat_form.form-inline
         input#chat_input(type='text', placeholder='Type here', disabled="disabled").form-control
         input(type='submit', value='Send')#chat_send.btn.btn-default
+        label.switch
+            input.switch-input(type='checkbox')
+            span.switch-label(data-on='On', data-off='Off')
+            span.switch-handle
