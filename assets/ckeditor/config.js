@@ -2,6 +2,7 @@
  * @license Copyright (c) 2003-2013, CKSource - Frederico Knabben. All rights reserved.
  * For licensing, see LICENSE.html or http://ckeditor.com/license
  */
+CKEDITOR.disableAutoInline = false;
 
 CKEDITOR.editorConfig = function( config ) {
 	// Define changes to default configuration here.
@@ -49,6 +50,7 @@ CKEDITOR.editorConfig = function( config ) {
         ['NumberedList','BulletedList','-','Outdent','Indent','-','Blockquote'],
         ['Image']
     ];
+    
     
 
 	// The default plugins included in the basic setup define some buttons that

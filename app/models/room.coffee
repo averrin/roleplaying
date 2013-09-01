@@ -66,6 +66,8 @@ HeroSchema = new Schema
         type: String
     description:
         type: String
+    notes:
+        type: String
     layout: Schema.Types.Mixed
     settings: Schema.Types.Mixed
 

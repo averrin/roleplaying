@@ -12,5 +12,9 @@ block sidebar
     ul#player_list
 
 block status
-    .status(contenteditable="#{is_master}")
+    #room_description(contenteditable="#{is_master}")
         != room.description
+
+block notes
+    #notes(contenteditable="true")
+        != hero.notes

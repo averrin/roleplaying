@@ -20,10 +20,15 @@ exports.main = (req, res) ->
                         col: 1
                         row: 2
                         size_x: 4
-                        size_y: 2
+                        size_y: 4
                     list_widget:
                         col: 5
                         row: 1
+                        size_x: 2
+                        size_y: 2
+                    notes_widget:
+                        col: 5
+                        row: 3
                         size_x: 2
                         size_y: 2
                     status_widget:

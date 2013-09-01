@@ -67,7 +67,7 @@ root.disconnect = (data)->
         
         
 root.room_description = (desc)->
-    $(".status").html desc
+    $("#room_description").html desc
 
 
 root.routes =
@@ -88,6 +88,7 @@ root.layout_change = (ev, ui)->
         chat_widget: gridster.serialize($("#chat_widget"))[0]
         list_widget: gridster.serialize($("#list_widget"))[0]
         status_widget: gridster.serialize($("#status_widget"))[0]
+        notes_widget: gridster.serialize($("#notes_widget"))[0]
     root.socket.emit "update_layout", layout
 
 $(document).ready ->
@@ -108,8 +109,8 @@ $(document).ready ->
     root.socket = io.connect()
 
     CKEDITOR.on 'instanceReady', ()->
-        CKEDITOR.instances['editor1'].on 'change', ()->
-            root.socket.emit "room_description", $(".status").html()
+        CKEDITOR.instances['room_description'].on 'change', ()->
+            root.socket.emit "room_description", $("#room_description").html()
 
   
     root.socket.on "server_message", (data) ->
@@ -132,6 +133,9 @@ $(document).ready ->
             $("#request_history").hide()
         $("#chat_input").attr("disabled", null)
         $("#chat_input").focus()
+        _.each CKEDITOR.instances, (e, i) ->
+            $(e.element.$).attr "contenteditable", "true"
+            e.readOnly = false
         
       
     _.each _.keys(root.routes), (e,i)->
