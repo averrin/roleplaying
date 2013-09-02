@@ -31,6 +31,11 @@ exports.main = (req, res) ->
                         row: 3
                         size_x: 2
                         size_y: 2
+                    hero_widget:
+                        col: 7
+                        row: 1
+                        size_x: 2
+                        size_y: 2
                     status_widget:
                         col: 1
                         row: 1

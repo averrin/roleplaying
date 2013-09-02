@@ -10,7 +10,9 @@ var app = require('express')(),
     mongoose = require('mongoose'),
     coffee = require('coffee-script'),
     server = http.createServer(app),
-    io = require("socket.io").listen(server);
+    io = require("socket.io"),
+    socketioWildcard = require( 'socket.io-wildcard' ),
+    io = socketioWildcard(io).listen(server);
 
 var env = process.env.NODE_ENV || 'development',
     config = require('./config/environment')[env],

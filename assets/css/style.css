@@ -17,6 +17,6 @@ article.system_event{color:#808080}
 .npc{color:#59a6e2}
 .widgets{list-style:none;display:none}
 .widget{background:#eee;padding:0;border-radius:5px 5px 0 0}
-.widget_header{background:#555;padding:2px 6px;color:#eee;border-radius:5px 5px 0 0}
+.widget_header{background:#555;padding:2px 6px;color:#eee;border-radius:5px 5px 0 0;cursor:move}
 .widget_content{height:100%;padding:6px}
-#room_description,#notes{height:100%;outline:0 solid transparent}
+#room_description,#notes,#hero_description{height:100%;outline:0 solid transparent}

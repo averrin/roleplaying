@@ -29,7 +29,7 @@ block content
             data-sizey="#{hero.layout.status_widget.size_y}",
             data-sizex="#{hero.layout.status_widget.size_x}"
           )
-            #room.widget_header(data-room=room.name)!= 'Room <strong>' + room.name + '</strong> description'
+            #room.widget_header(data-room="#{room.name}")!= "Room <strong>"+room.name+"</strong> description"
             .widget_content
               block status
           li#notes_widget.widget(
@@ -38,9 +38,18 @@ block content
             data-sizey="#{hero.layout.notes_widget.size_y}",
             data-sizex="#{hero.layout.notes_widget.size_x}"
           )
-            #room.widget_header Notes
+            .widget_header Note
             .widget_content
               block notes
+          li#hero_widget.widget(
+            data-col="#{hero.layout.hero_widget.col}",
+            data-row="#{hero.layout.hero_widget.row}",
+            data-sizey="#{hero.layout.hero_widget.size_y}",
+            data-sizex="#{hero.layout.hero_widget.size_x}"
+          )
+            #hero.widget_header(data-hero="#{hero._id}")!= "Hero: " + hero.displayname
+            .widget_content
+              block hero
               
   include input_form
 

@@ -44,6 +44,7 @@ root.request_history = ()->
         room: $("#room").data "room"
         
 root.show_history = (history)->
+    chat = $("#chat_box")
     _.each history.reverse(), (e,i)->
         h = root.templates[e.event_type] e
         $("#chat_box").prepend h
@@ -59,8 +60,10 @@ root.connect = ()->
     root.socket.emit "connect",
         user: $("#user").data "user"
         room: $("#room").data "room"
+        hero: $("#hero").data "hero"
         
 root.disconnect = (data)->
+    console.log data
     if data.username == $("#user").data("username")
         console.log "You were kicked"
         window.location = '/'
@@ -89,6 +92,7 @@ root.layout_change = (ev, ui)->
         list_widget: gridster.serialize($("#list_widget"))[0]
         status_widget: gridster.serialize($("#status_widget"))[0]
         notes_widget: gridster.serialize($("#notes_widget"))[0]
+        hero_widget: gridster.serialize($("#hero_widget"))[0]
     root.socket.emit "update_layout", layout
 
 $(document).ready ->
@@ -109,8 +113,13 @@ $(document).ready ->
     root.socket = io.connect()
 
     CKEDITOR.on 'instanceReady', ()->
-        CKEDITOR.instances['room_description'].on 'change', ()->
-            root.socket.emit "room_description", $("#room_description").html()
+        if 'room_description' in CKEDITOR.instances
+            CKEDITOR.instances['room_description'].on 'change', ()->
+                root.socket.emit "room_description", $("#room_description").html()
+        CKEDITOR.instances['notes'].on 'change', ()->
+            root.socket.emit "notes", $("#notes").html()
+        CKEDITOR.instances['hero_description'].on 'change', ()->
+            root.socket.emit "hero_description", $("#hero_description").html()
 
   
     root.socket.on "server_message", (data) ->

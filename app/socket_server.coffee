@@ -83,31 +83,30 @@ on_message = (socket, message_text)->
                 allow_send: true
                 event_type: "chat_message"
             
-            console.log "Incoming message (%s): %s", data.user.name, message_text
+            console.log "Incoming message (%s): %s", data.hero.displayname, message_text
             
-            if message.text.indexOf("/roll ") == 0
-                message = roll_die message
-            
-            if message.text.indexOf("/me ") == 0
-                message = player_event message
-                
-            if message.text.indexOf("/event ") == 0
-                if data.user.name == room.master.name
-                    message = master_event message
-
-            if message.text.indexOf("/as ") == 0
-                if data.user.name == room.master.name
-                    message = master_as message
-                    
-            if message.text.indexOf("/help") == 0
-                message = help message, data.user.name == room.master.name
-            
-            if message.text.indexOf("/kick ") == 0
-                if data.user.name == room.master.name
-                    player = message.text.split(" ").slice(1)[0]
-                    message = kick message, player
+            re = new RegExp("^/([^ ]*)")
+            cmd = re.exec(message.text)
+            if cmd?
+                switch cmd[1]
+                    when 'roll'
+                        message = roll_die message
+                    when 'me'
+                        message = player_event message
+                    when 'event'
+                        if data.is_master
+                            message = master_event message
+                    when 'as'
+                        if data.is_master
+                            message = master_as message      
+                    when 'help'
+                        message = help message, data.is_master               
+                    when 'kick'
+                        if data.is_master
+                            player = message.text.split(" ").slice(1)[0]
+                            message = kick socket, message, player
                                     
-            if data.user.name == room.master.name
+            if data.is_master
                 displayname = message.username
             else
                 displayname = "<span class='you'>You</span>"
@@ -140,35 +139,49 @@ on_message = (socket, message_text)->
     
 on_connect = (socket, data) ->
     now = dateFormat(new Date(), df)
-    User.findOne _id: data.user, (err, user)->
-        if user?
-            Room.findOne name: data.room, (err, room)->
-                if room?
-                    console.log "New user for %s. Username: %s", socket.id, user.name
-                    console.log "Auth data: ", data
-                    data.user = user
-                    data.room = room
-                    socket.join(data.room.name)
-                    if room.master.toHexString() == user._id.toHexString()
-                        data.displayname = "<span class='master'>"+data.user.name+'</span>'
-                    else
-                        data.displayname = data.user.name
-                    socket.broadcast.to(data.room.name).emit "new_player",
-                        timestamp: now
-                        username: data.displayname
-                        user_id: user._id
-                        room: room.name
-                    socket.set "data", data
-                    socket.emit "connected",
-                        timestamp: now
-                    pl = _.pluck _.pluck(socket.all.clients(data.room.name), 'store'), 'data'
-                    players = []
-                    _.each pl[0], (e,i)->
-                        players.push
-                            user_id: e.user._id
-                            username: e.displayname
-                            
-                    socket.emit "players", players
+    Hero.findOne(_id: data.hero).populate("user").exec (err, hero)->
+        unless hero?
+            return
+        unless hero.user._id.toHexString() == data.user
+            return
+            
+        if "/" + hero.displayname in _.keys(socket.all.manager.rooms)
+            kick socket, {}, hero.displayname
+            
+        user = hero.user
+            
+        Room.findOne name: data.room, (err, room)->
+            unless room?
+                return
+                
+            console.log "New user for %s. Username: %s, Hero: %s", socket.id, user.name, hero.displayname
+            console.log "Auth data: ", data
+            data.user = user
+            data.room = room
+            data.hero = hero
+            data.is_master = room.master.toHexString() == user._id.toHexString()
+            socket.join(room.name)
+            socket.join(hero.displayname)
+            if data.is_master
+                data.displayname = "<span class='master'>"+hero.displayname+'</span>'
+            else
+                data.displayname = hero.displayname
+            socket.broadcast.to(data.room.name).emit "new_player",
+                timestamp: now
+                username: data.displayname
+                user_id: user._id
+                room: room.name
+            socket.set "data", data
+            socket.emit "connected",
+                timestamp: now
+            pl = _.pluck _.pluck(socket.all.clients(data.room.name), 'store'), 'data'
+            players = []
+            _.each pl[0], (e,i)->
+                players.push
+                    user_id: e.hero._id
+                    username: e.displayname
+                    
+            socket.emit "players", players
         
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id
@@ -181,10 +194,22 @@ on_disconnect = (socket)->
             timestamp: timestamp
             username: data.displayname
             
-kick = (message, player)->
-    message.event_type = "disconnect"
-    message.text = player + " was kicked"
-    message.username = player
+kick = (socket, message, player)->
+    if "/" + player in _.keys(socket.all.manager.rooms)
+        message.event_type = "disconnect"
+        message.text = player + " was kicked"
+        message.username = player
+        
+        sockets = socket.all.manager.rooms["/" + player]
+        _.each sockets, (e,i)->
+            socket.all.socket(e).emit message.event_type, message
+            socket.all.socket(e).disconnect()
+        
+    else
+        message.event_type = "system_message"
+        message.text = "Wrong player to kick"
+        message.allow_send = false
+    
     return message
     
 on_get_history = (socket)->
@@ -209,7 +234,7 @@ on_error = (socket)->
 on_room_description = (socket, desc)->
     socket.get "data", (err, data)->
         unless data?
-            return
+            return false
 
         Room.update
             _id: data.room._id
@@ -217,18 +242,44 @@ on_room_description = (socket, desc)->
             $set:
                 description: desc
         , (e, n)->
-            socket.broadcast.emit "room_description", desc
+            socket.broadcast.to(data.room.name).emit "room_history", desc
+            
+on_notes = (socket, notes)->
+    socket.get "data", (err, data)->
+        unless data?
+            return false
+
+        Hero.update
+            user: data.user._id
+        ,
+            $set:
+                notes: notes
+        , (e, n)->
+            return true
+
+on_hero_description = (socket, desc)->
+    socket.get "data", (err, data)->
+        unless data?
+            return false
+
+        Hero.update
+            user: data.user._id
+        ,
+            $set:
+                description: desc
+        , (e, n)->
+            return true
     
 on_update_layout = (socket, layout)->
     socket.get "data", (err, data)->
         unless data?
-            return
+            return false
             
         Hero.update user: data.user._id,
             $set:
                 layout: layout
             , (e, n)->
-                console.log e, n, "layout updated"
+                return true
     
 
 exports.init = (io)->
@@ -236,13 +287,29 @@ exports.init = (io)->
     sockets.on "connection", (socket) ->
         console.log "Client Connected. ID: %s", socket.id
         socket.all = io.sockets
-        socket.on "message", (message_text) -> on_message socket, message_text
-        socket.on "request_history", -> on_get_history socket
-        socket.on "connect", (data) -> on_connect socket, data
-        socket.on "update_layout", (data) -> on_update_layout socket, data
-        socket.on "room_description", (data) -> on_room_description socket, data
-        socket.on "disconnect", -> on_disconnect socket
+        socket.io = io
         
-        socket.on "error", (err)-> on_error socket, err
+        socket.on "*", (event)->
+            data = event.args[0]
+            switch event.name
+                when "message"
+                    on_message socket, data
+                when "request_history"
+                    on_get_history socket
+                when "connect"
+                    on_connect socket, data
+                when "update_layout"
+                    on_update_layout socket, data
+                when "room_description"
+                    on_room_description socket, data
+                when "hero_description"
+                    on_hero_description socket, data
+                when "notes"
+                    on_notes socket, data
+                when "disconnect"
+                    on_disconnect socket
+                when "error"
+                    on_error socket, err
+                    
         socket.emit "plz_connect"
                     
