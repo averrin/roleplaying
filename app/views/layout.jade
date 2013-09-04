@@ -46,8 +46,9 @@ html(lang='en')
 
         a.navbar-brand(href='/') RPG Workshop
         if req.user
-          p.navbar-text.pull-right#user(data-user="#{req.user._id}", data-username="#{req.user.name}")
-            | Welcome, #{req.user.name}
+          - var admin = req.user.admin;
+          p.navbar-text.pull-right#user(data-user="#{req.user._id}", data-username="#{req.user.name}", data-admin="#{is_admin}")
+            | Welcome, #{req.user.name} [#{is_admin}]
             | | 
             a(href='/logout') logout
         else

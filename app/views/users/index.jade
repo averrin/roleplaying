@@ -17,6 +17,7 @@ block main
       th Username
       th Email
       th Created
+      th Admin?
       th Actions
     each user in user_profiles
       tr
@@ -24,6 +25,7 @@ block main
         td= user.username
         td= user.email
         td= user.created
+        td= user.admin
         td
           a(href='/users/#{user.id}/edit') edit
           |  | 

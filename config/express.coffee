@@ -69,5 +69,6 @@ module.exports = (app, config, passport) ->
     console.log 'Configuring production environment'
     app.use express.errorHandler()
     return
+  
     
   return

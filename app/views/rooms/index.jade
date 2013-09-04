@@ -15,7 +15,7 @@ block content
             .room.row.well 
                 .col-11
                     .room_title= room.name
-                    != 'Master: <em>' + room.master.name + '</em>'
+                    != 'Master: <em>' + room.master.name + '</em> (online: ' + room.online.length + ')'
                 .col-1
                     if req.user
                         button.join_room.btn.btn-default.pull-right(data-room=room.name) Join

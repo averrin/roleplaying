@@ -63,10 +63,14 @@ root.connect = ()->
         hero: $("#hero").data "hero"
         
 root.disconnect = (data)->
-    console.log data
+    unless data?
+        return
     if data.username == $("#user").data("username")
         console.log "You were kicked"
         window.location = '/'
+    else
+        data.event_type = "player_leave"
+        root.remove_user_from_list data
         
         
 root.room_description = (desc)->
@@ -157,5 +161,9 @@ $(document).ready ->
         if $("#chat_input").val() != ''
             root.socket.emit "message", $("#chat_input").val()
             $("#chat_input").val('')
+            
+    window.onbeforeunload = (e)->
+        root.socket.emit "quit"
+        return "Really quit?"
             
  

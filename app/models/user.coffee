@@ -23,6 +23,9 @@ UserSchema = new Schema
   created:
     type: Date
     default: Date.now
+  admin:
+    type: Boolean
+    default: false
 
 #
 # Hash password before saving

@@ -42,10 +42,15 @@ module.exports = (app, config, passport, auth) ->
   app.param 'roomName', rooms.roomName
 
 
-  # Play room
-  #app.get '/rooms', auth.requiresLogin, rooms.index
-  #app.get '/room/:roomId', auth.requiresLogin, rooms.main
-  #
-  #app.param 'roomId', rooms.room
 
-  return
+  #  routes
+  app.get '/', heroes.index
+  app.get '/heroes', heroes.manage
+  app.get '/heroes/new', auth.requiresLogin, heroes.new
+  app.get '/heroes/:HeroId', heroes.show
+  app.post '/heroes', auth.requiresLogin, heroes.create
+  app.get '/heroes/:HeroId/edit', auth.requiresLogin, heroes.edit
+  app.put '/heroes/:HeroId', auth.requiresLogin, heroes.update
+  app.get '/heroes/:HeroId/destroy', auth.requiresLogin, heroes.destroy
+
+  app.param 'HeroId', heroes.hero  

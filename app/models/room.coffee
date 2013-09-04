@@ -23,6 +23,9 @@ RoomSchema = new Schema
     ref: 'User'
   description:
     type: String
+  online:
+      type: [Schema.Types.ObjectId]
+      ref: 'User'
  
 #
 # Schema statics
@@ -53,22 +56,3 @@ HistorySchema = new Schema
         type: String
         
 History = mongoose.model 'History', HistorySchema
-
-
-HeroSchema = new Schema
-    room:
-        type: Schema.Types.ObjectId
-        ref: "room"
-    user:
-        type: Schema.Types.ObjectId
-        ref: 'User'
-    displayname:
-        type: String
-    description:
-        type: String
-    notes:
-        type: String
-    layout: Schema.Types.Mixed
-    settings: Schema.Types.Mixed
-
-Hero = mongoose.model 'Hero', HeroSchema

@@ -81,6 +81,7 @@ on_message = (socket, message_text)->
                 room: data.room.name
                 timestamp: dateFormat(new Date(), df)
                 allow_send: true
+                out_of_history: false
                 event_type: "chat_message"
             
             console.log "Incoming message (%s): %s", data.hero.displayname, message_text
@@ -120,19 +121,22 @@ on_message = (socket, message_text)->
             unless message.allow_send
                 return
             
-            history = new History
-                room: room._id
-                user: data.user._id
-                timestamp: new Date()
-                event_type: message.event_type
-                text: message.text
-                displayname: message.username
-            console.log history
-            history.save (err)->
-                if err?
-                    console.log err
-                else
-                    socket.broadcast.to(data.room.name).emit message.event_type, message
+            if message.out_of_history
+                socket.broadcast.to(data.room.name).emit message.event_type, message
+            else            
+                history = new History
+                    room: room._id
+                    user: data.user._id
+                    timestamp: new Date()
+                    event_type: message.event_type
+                    text: message.text
+                    displayname: message.username
+
+                history.save (err)->
+                    if err?
+                        console.log err
+                    else
+                        socket.broadcast.to(data.room.name).emit message.event_type, message
                                 
                     
                                 
@@ -182,6 +186,10 @@ on_connect = (socket, data) ->
                     username: e.displayname
                     
             socket.emit "players", players
+            
+            room.online.push user._id
+            room.save (err)->
+                console.log err, "user online", room
         
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id
@@ -193,6 +201,11 @@ on_disconnect = (socket)->
         socket.broadcast.to(data.room.name).emit "player_leave",
             timestamp: timestamp
             username: data.displayname
+        
+        Room.findById(data.room._id).exec (err, room)->
+            room.online.remove data.user._id
+            room.save (err)->
+                console.log err, "user disconnect"
             
 kick = (socket, message, player)->
     if "/" + player in _.keys(socket.all.manager.rooms)
@@ -209,7 +222,7 @@ kick = (socket, message, player)->
         message.event_type = "system_message"
         message.text = "Wrong player to kick"
         message.allow_send = false
-    
+    message.out_of_history = true
     return message
     
 on_get_history = (socket)->
@@ -307,6 +320,8 @@ exports.init = (io)->
                 when "notes"
                     on_notes socket, data
                 when "disconnect"
+                    on_disconnect socket
+                when "quit"
                     on_disconnect socket
                 when "error"
                     on_error socket, err

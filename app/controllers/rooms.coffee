@@ -11,39 +11,12 @@ exports.main = (req, res) ->
     is_master = room.master.equals req.user._id
     Hero.findOne user: req.user._id, (err, hero)->
         unless hero
-            hero = new Hero
-                user: req.user._id
-                room: req.room._id
-                displayname: req.user.name
-                layout:
-                    chat_widget:
-                        col: 1
-                        row: 2
-                        size_x: 4
-                        size_y: 4
-                    list_widget:
-                        col: 5
-                        row: 1
-                        size_x: 2
-                        size_y: 2
-                    notes_widget:
-                        col: 5
-                        row: 3
-                        size_x: 2
-                        size_y: 2
-                    hero_widget:
-                        col: 7
-                        row: 1
-                        size_x: 2
-                        size_y: 2
-                    status_widget:
-                        col: 1
-                        row: 1
-                        size_x: 4
-                        size_y: 1
-                
-            hero.save (err)->
-                console.log err, "Hero saved"
+            res.render 'heroes/new',
+                hero: new Hero({})
+                room: room._id
+                is_master: is_master
+            return
+
         res.render 'chat/main',
             room: room
             is_master: is_master
@@ -98,7 +71,7 @@ exports.update = (req, res) ->
         room:room
         errors: err.errors
     else
-      req.flash 'notice', room.title + ' was successfully updated.'
+      req.flash 'notice', room.name + ' was successfully updated.'
       res.redirect '/rooms'
     return
   return
@@ -109,7 +82,7 @@ exports.update = (req, res) ->
 exports.destroy = (req, res) ->
   room = req.room
   room.remove (err) ->
-    req.flash 'notice', room.title + ' was successfully deleted.'
+    req.flash 'notice', room.name + ' was successfully deleted.'
     res.redirect '/rooms'
 
 #
@@ -117,7 +90,7 @@ exports.destroy = (req, res) ->
 #
 exports.manage = (req, res) ->
   room_list = Room.find()
-  room_list.populate("master").exec (err, rooms_list) ->
+  room_list.populate("master online").exec (err, rooms_list) ->
     res.render 'rooms/manage',
       all_rooms: rooms_list
       message: req.flash 'notice'
@@ -129,6 +102,7 @@ exports.manage = (req, res) ->
 exports.index = (req, res) ->
   room_list = Room.find()
   room_list.populate("master").exec (err, rooms_list) ->
+    console.log rooms_list
     res.render 'rooms/index',
       all_rooms: rooms_list
   return

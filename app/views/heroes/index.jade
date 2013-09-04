@@ -1,0 +1,23 @@
+extends base
+
+block title
+  | List heroes
+
+block main
+  
+  each hero in all_heroes
+  
+    .container
+    
+      .row
+        p=hero.displayname
+    
+      .row
+        p=hero.description
+    
+      .row
+        p=hero.room
+    
+      .row
+        p=hero.user
+    

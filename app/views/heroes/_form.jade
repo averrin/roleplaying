@@ -1,0 +1,30 @@
+extends base
+
+block main
+  - var action = '/heroes'
+  if (!hero.isNew)
+    - action += '/'+hero.id
+  
+  form(action=action, method='post')
+    if(!hero.isNew)
+      input(type='hidden', name='_method', value='put')
+    
+    .form-group
+      label Displayname
+      input.form-control(name='displayname', type="text", value=hero.displayname)
+    
+    .form-group
+      label Description
+      textarea.ckeditor.form-control(name='description')
+        != hero.description
+    
+    input(name='room', type='hidden', value=room)
+    
+    input(name='user', type='hidden', value=req.user._id)
+    
+    p
+      button.btn.btn-primary(type='submit') Save hero
+
+block scripts
+
+    script(defer, src="/ckeditor/ckeditor.js")  
