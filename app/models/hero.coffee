@@ -30,6 +30,9 @@ HeroSchema = new Schema
         type: String
     layout: Schema.Types.Mixed
     settings: Schema.Types.Mixed
+    inventory:
+        type: [Schema.Types.ObjectId]
+        ref: 'Item'
     
 #
 # Schema statics

@@ -54,3 +54,16 @@ module.exports = (app, config, passport, auth) ->
   app.get '/heroes/:HeroId/destroy', auth.requiresLogin, heroes.destroy
 
   app.param 'HeroId', heroes.hero  
+  
+
+  #  routes
+  app.get '/', items.index
+  app.get '/items', items.manage
+  app.get '/items/new', auth.requiresLogin, items.new
+  app.get '/items/:itemId', items.show
+  app.post '/items', auth.requiresLogin, items.create
+  app.get '/items/:itemId/edit', auth.requiresLogin, items.edit
+  app.put '/items/:itemId', auth.requiresLogin, items.update
+  app.get '/items/:itemId/destroy', auth.requiresLogin, items.destroy
+
+  app.param 'itemId', items.item
