@@ -1,6 +1,7 @@
 _ = require("underscore")
 dateFormat = require('dateformat')
 mongoose = require 'mongoose'
+f = require('util').format
 
 User = mongoose.model 'User'
 Hero = mongoose.model 'Hero'
@@ -31,38 +32,38 @@ roll_die = (message, cb)->
         message.text = "Wrong /roll format"
         message.allow_send = false
         
-    return message
+    cb message
     
     
 player_event = (message, cb)->
     message.event_type = "event"
     message.text = message.text.slice(4)
-    return message
+    cb message
 
 
 master_event = (message, cb)->
     message.event_type = "master_event"
     message.text = message.text.slice(7)
-    return message
+    cb message
 
 master_as = (message, cb)->
     words = message.text.split ' '
-    message.username = "<span class='npc'>" + words[1] + "</span>"
+    message.username = f "<span class='npc'>%s</span>", words[1]
     message.text = words.slice(2).join " "
-    return message
+    cb message
 
 help = (message, is_master, cb)->
     message.event_type = "system_message"
-    message.text = "<strong>Command list:</strong><ul>"+
-        "<li><strong>/me</strong> blah-blah &mdash; you do blah-blah as event</li>"+
-        "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
+    message.text = "<strong>Command list:</strong><ul>"
+    message.text += "<li><strong>/me</strong> blah-blah &mdash; you do blah-blah as event</li>"
+    message.text += "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
     if is_master
         message.text += "<li><strong>/event</strong> blah-blah &mdash; show blah-blah as global event</li>"
         message.text += "<li><strong>/as</strong> Name blah-blah &mdash; say blah-blah as Name</li>"
         message.text += "<li><strong>/kick</strong> Player &mdash; kick player from room</li>"
     message.text += "</ul>"
     message.allow_send = false
-    return message
+    cb message
     
 show_stats = (message, player, cb)->
     message.allow_send = false
@@ -78,7 +79,7 @@ show_stats = (message, player, cb)->
             message.text = "Wrong hero name"
         else
             message.event_type = "master_event"
-            message.text = player + " description:<br>" + hero[0].description
+            message.text = f "<strong>%s description:</strong><br>%s", player, hero[0].description
     
         cb message
 
@@ -120,7 +121,8 @@ on_message = (socket, message_text)->
                                 send_message socket, msg
                     when 'as'
                         if data.is_master
-                            return send_message socket, master_as(message)
+                            master_as message, (msg)->
+                                send_message socket, msg 
                     when 'help'
                         help message, data.is_master, (msg)->
                             send_message socket, msg
@@ -199,7 +201,7 @@ on_connect = (socket, data) ->
             socket.join(room.name)
             socket.join(hero.displayname)
             if data.is_master
-                data.displayname = "<span class='master'>"+hero.displayname+'</span>'
+                data.displayname = f "<span class='master'>%s</span>", hero.displayname
             else
                 data.displayname = hero.displayname
             socket.broadcast.to(data.room.name).emit "new_player",
@@ -256,7 +258,7 @@ kick = (socket, message, player)->
         message.text = "Wrong player to kick"
         message.allow_send = false
     message.out_of_history = true
-    return message
+    cb message
     
 on_get_history = (socket)->
     socket.get "data", (err, data)->
