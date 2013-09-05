@@ -10,7 +10,9 @@ module.exports = (passport) ->
     done(null, user)
   
   passport.deserializeUser (obj, done) ->
-    done(null, obj)
+    User.findById(obj._id).exec (err, user)->
+        obj.admin = user.admin
+        done(null, obj)
 
   # Define the local auth strategy
   passport.use new LocalStrategy (username, password, done) ->

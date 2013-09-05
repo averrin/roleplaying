@@ -46,9 +46,8 @@ html(lang='en')
 
         a.navbar-brand(href='/') RPG Workshop
         if req.user
-          - var admin = req.user.admin;
-          p.navbar-text.pull-right#user(data-user="#{req.user._id}", data-username="#{req.user.name}", data-admin="#{is_admin}")
-            | Welcome, #{req.user.name} [#{is_admin}]
+          p.navbar-text.pull-right#user(data-user="#{req.user._id}", data-username="#{req.user.name}", data-admin="#{req.user.admin}")
+            | Welcome, #{req.user.name} #{req.user.admin ? "[admin]" : ""}
             | | 
             a(href='/logout') logout
         else
@@ -61,7 +60,9 @@ html(lang='en')
           li: a(href='/') Home
           if req.user
             li: a(href='/heroes/') Heroes
-            //li: a(href='/rooms/') Play rooms
+            if req.user.admin
+                li: a(href='/rooms/') Play rooms
+                li: a(href='/users/') Users
               
     block content
     

@@ -1,7 +1,8 @@
 _ = require("underscore")
 dateFormat = require('dateformat')
 mongoose = require 'mongoose'
-f = require('util').format
+u = require('util')
+f = u.format
 
 User = mongoose.model 'User'
 Hero = mongoose.model 'Hero'
@@ -193,7 +194,7 @@ on_connect = (socket, data) ->
                 return
                 
             console.log "New user for %s. Username: %s, Hero: %s", socket.id, user.name, hero.displayname
-            console.log "Auth data: ", data
+            console.log "Auth data: ", u.inspect data
             data.user = user
             data.room = room
             data.hero = hero
