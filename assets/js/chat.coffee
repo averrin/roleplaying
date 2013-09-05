@@ -137,10 +137,7 @@ $(document).ready ->
         $(".loader").hide()
         $(".widgets").show()
         $("#player_list").html ""
-        $("#request_history").hide()
         $("#request_history").off()
-        $("#chat_box").prepend "<p>Send <strong>/help</strong> to list commands</p>"
-        $("#chat_box").prepend "<a href='javascript://' id='request_history'>Request history</a>"
         $("#request_history").on "click", (ev)->
             root.request_history()
             $("#request_history").hide()
@@ -162,8 +159,7 @@ $(document).ready ->
             root.socket.emit "message", $("#chat_input").val()
             $("#chat_input").val('')
             
-    window.onbeforeunload = (e)->
+    window.onunload = (e)->
         root.socket.emit "quit"
-        return "Really quit?"
             
  

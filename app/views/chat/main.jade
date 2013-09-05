@@ -7,6 +7,9 @@ block main
     if is_master
         p You are Master of this room
     #chat_box
+        | Send <strong>/help</strong> to list commands
+        br
+        a(href='javascript://')#request_history Request history
 
 block sidebar
     ul#player_list

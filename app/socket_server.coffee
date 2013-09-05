@@ -15,7 +15,7 @@ df = "HH:MM:ss"
 
 roll_template = _.template "roll dice <%=d%> = <strong><%=result%></strong>"
 
-roll_die = (message)->
+roll_die = (message, cb)->
     d = message.text.slice(6).replace RegExp(" ", "g"), ""
     try
         result = dice.rollDie d
@@ -34,24 +34,24 @@ roll_die = (message)->
     return message
     
     
-player_event = (message)->
+player_event = (message, cb)->
     message.event_type = "event"
     message.text = message.text.slice(4)
     return message
 
 
-master_event = (message)->
+master_event = (message, cb)->
     message.event_type = "master_event"
     message.text = message.text.slice(7)
     return message
 
-master_as = (message)->
+master_as = (message, cb)->
     words = message.text.split ' '
     message.username = "<span class='npc'>" + words[1] + "</span>"
     message.text = words.slice(2).join " "
     return message
 
-help = (message, is_master)->
+help = (message, is_master, cb)->
     message.event_type = "system_message"
     message.text = "<strong>Command list:</strong><ul>"+
         "<li><strong>/me</strong> blah-blah &mdash; you do blah-blah as event</li>"+
@@ -63,6 +63,24 @@ help = (message, is_master)->
     message.text += "</ul>"
     message.allow_send = false
     return message
+    
+show_stats = (message, player, cb)->
+    message.allow_send = false
+    console.log "stats for", player
+    Hero.find("displayname":player).populate(
+        path:"room"
+        match:
+            "name": message.room
+        ).exec (err, hero)->
+        #console.log err, hero
+        unless hero[0]?
+            message.event_type = "system_message"
+            message.text = "Wrong hero name"
+        else
+            message.event_type = "master_event"
+            message.text = player + " description:<br>" + hero[0].description
+    
+        cb message
 
 on_message = (socket, message_text)->
     socket.get "data", (err, data)->
@@ -91,52 +109,66 @@ on_message = (socket, message_text)->
             if cmd?
                 switch cmd[1]
                     when 'roll'
-                        message = roll_die message
+                        roll_die message, (msg)->
+                            send_message socket, msg
                     when 'me'
-                        message = player_event message
+                        player_event message, (msg)->
+                            send_message socket, msg
                     when 'event'
                         if data.is_master
-                            message = master_event message
+                            master_event message, (msg)->
+                                send_message socket, msg
                     when 'as'
                         if data.is_master
-                            message = master_as message      
+                            return send_message socket, master_as(message)
                     when 'help'
-                        message = help message, data.is_master               
+                        help message, data.is_master, (msg)->
+                            send_message socket, msg
                     when 'kick'
                         if data.is_master
                             player = message.text.split(" ").slice(1)[0]
-                            message = kick socket, message, player
-                                    
-            if data.is_master
-                displayname = message.username
-            else
-                displayname = "<span class='you'>You</span>"
-            socket.emit message.event_type,
-                text: message.text
-                username: displayname
-                room: message.room
-                timestamp: message.timestamp
-                event_type: message.event_type
-            
-            unless message.allow_send
-                return
-            
-            if message.out_of_history
-                socket.broadcast.to(data.room.name).emit message.event_type, message
+                            kick socket, message, player, (msg)->
+                                send_message socket, msg
+                    when 'stats'
+                        player = message.text.split(" ").slice(1)[0]
+                        show_stats message, player, (msg)->
+                            send_message socket, msg
             else            
-                history = new History
-                    room: room._id
-                    user: data.user._id
-                    timestamp: new Date()
-                    event_type: message.event_type
-                    text: message.text
-                    displayname: message.username
+                send_message socket, message
+                        
+send_message = (socket, message)->
+    #console.log "send message", message
+    socket.get "data", (err, data)->                        
+        if data.is_master
+            displayname = message.username
+        else
+            displayname = "<span class='you'>You</span>"
+        socket.emit message.event_type,
+            text: message.text
+            username: displayname
+            room: message.room
+            timestamp: message.timestamp
+            event_type: message.event_type
+        
+        unless message.allow_send
+            return
+        
+        if message.out_of_history
+            socket.broadcast.to(data.room.name).emit message.event_type, message
+        else            
+            history = new History
+                room: data.room._id
+                user: data.user._id
+                timestamp: new Date()
+                event_type: message.event_type
+                text: message.text
+                displayname: message.username
 
-                history.save (err)->
-                    if err?
-                        console.log err
-                    else
-                        socket.broadcast.to(data.room.name).emit message.event_type, message
+            history.save (err)->
+                if err?
+                    console.log err
+                else
+                    socket.broadcast.to(data.room.name).emit message.event_type, message
                                 
                     
                                 
@@ -187,9 +219,10 @@ on_connect = (socket, data) ->
                     
             socket.emit "players", players
             
-            room.online.push user._id
-            room.save (err)->
-                console.log err, "user online", room
+            if room.online.indexOf(user._id) == -1
+                room.online.push user._id
+                room.save (err)->
+                    console.log err, "user online", room
         
 on_disconnect = (socket)->
     console.log "Client Disconnected. ID: %s", socket.id

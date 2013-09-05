@@ -13,6 +13,7 @@ module.exports = (grunt) ->
       ]
       options:
         livereload: 3301
+        pathPrepend: '/app/'
 
   grunt.loadNpmTasks 'grunt-coffeelint'
   grunt.loadNpmTasks 'grunt-contrib-watch'

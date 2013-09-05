@@ -12,7 +12,6 @@ var app = require('express')(),
     server = http.createServer(app),
     io = require("socket.io"),
     socketioWildcard = require( 'socket.io-wildcard' ),
-    cb = require('coffee-backtrace'),
     io = socketioWildcard(io).listen(server);
 
 var env = process.env.NODE_ENV || 'development',

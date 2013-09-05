@@ -23,9 +23,19 @@ RoomSchema = new Schema
     ref: 'User'
   description:
     type: String
-  online:
-      type: [Schema.Types.ObjectId]
+  online: [
+      type: Schema.Types.ObjectId
       ref: 'User'
+  ]
+  accepted: [
+      type: Schema.Types.ObjectId
+      ref: 'User'
+  ]
+  blocked: [
+      type: Schema.Types.ObjectId
+      ref: 'User'
+  ]
+      
  
 #
 # Schema statics

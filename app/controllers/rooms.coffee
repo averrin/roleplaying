@@ -101,8 +101,7 @@ exports.manage = (req, res) ->
 #
 exports.index = (req, res) ->
   room_list = Room.find()
-  room_list.populate("master").exec (err, rooms_list) ->
-    console.log rooms_list
+  room_list.populate("master online").exec (err, rooms_list) ->
     res.render 'rooms/index',
       all_rooms: rooms_list
   return
