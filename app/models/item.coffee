@@ -22,6 +22,9 @@ ItemSchema = new Schema
     type: Boolean
   description:
     type: String
+  room:
+    type: Schema.Types.ObjectId
+    ref: 'Room'
     
  
 #
@@ -35,3 +38,23 @@ ItemSchema.statics =
     return
 
 Item = mongoose.model 'Item', ItemSchema
+
+SlotSchema = new Schema
+  uses:
+    type: Number
+  item:
+    type: Schema.Types.ObjectId
+    ref: 'Item'
+    
+ 
+#
+# Schema statics
+#
+SlotSchema.statics =
+  list: (cb) ->
+    this.find().sort
+      createdAt: -1
+    .exec(cb)
+    return
+
+Slot = mongoose.model 'Slot', SlotSchema

@@ -17,7 +17,7 @@ block main
       th Username
       th Email
       th Created
-      th Role
+      th Admin
       th Actions
     each user in user_profiles
       tr
@@ -25,7 +25,8 @@ block main
         td= user.username
         td= user.email
         td= dateShortMon(user.created)
-        td= user.admin ? "Admin" : "User"
+        td
+            span(class='#{user.admin ? "glyphicon-ok" : "glyphicon-remove"}').glyphicon
         td
           a(href='/users/#{user.id}/edit') edit
           |  | 

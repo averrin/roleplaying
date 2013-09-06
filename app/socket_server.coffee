@@ -13,166 +13,13 @@ dice = require('./dice')
 console.log "Roll 2d5+8 = %d", dice.rollDie "2d5+8"
 
 df = "mmmm dS, HH:MM"
-df = "HH:MM:ss"
+df = "HH:MM:ss"        
 
-roll_template = _.template "roll dice <%=d%> = <strong><%=result%></strong>"
-
-roll_die = (message, cb)->
-    d = message.text.slice(6).replace RegExp(" ", "g"), ""
-    try
-        result = dice.rollDie d
-    catch e
-        result = NaN
-    if result >= 0
-        message.text = roll_template
-            d: d
-            result: result
-        message.event_type = "event"
-    else
-        message.event_type = "system_message"
-        message.text = "Wrong /roll format"
-        message.allow_send = false
-        
-    cb message
-    
-    
-player_event = (message, cb)->
-    message.event_type = "event"
-    message.text = message.text.slice(4)
-    cb message
-
-
-master_event = (message, cb)->
-    message.event_type = "master_event"
-    message.text = message.text.slice(7)
-    cb message
-
-master_as = (message, cb)->
-    words = message.text.split ' '
-    message.username = f "<span class='npc'>%s</span>", words[1]
-    message.text = words.slice(2).join " "
-    cb message
-
-help = (message, is_master, cb)->
-    message.event_type = "system_message"
-    message.text = "<strong>Command list:</strong><ul>"
-    message.text += "<li><strong>/me</strong> blah-blah &mdash; you do blah-blah as event</li>"
-    message.text += "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
-    if is_master
-        message.text += "<li><strong>/event</strong> blah-blah &mdash; show blah-blah as global event</li>"
-        message.text += "<li><strong>/as</strong> Name blah-blah &mdash; say blah-blah as Name</li>"
-        message.text += "<li><strong>/kick</strong> Player &mdash; kick player from room</li>"
-    message.text += "</ul>"
-    message.allow_send = false
-    cb message
-    
-show_stats = (message, player, cb)->
-    message.allow_send = false
-    console.log "stats for", player
-    Hero.find("displayname":player).populate(
-        path:"room"
-        match:
-            "name": message.room
-        ).exec (err, hero)->
-        #console.log err, hero
-        unless hero[0]?
-            message.event_type = "system_message"
-            message.text = "Wrong hero name"
-        else
-            message.event_type = "master_event"
-            message.text = f "<strong>%s description:</strong><br>%s", player, hero[0].description
-    
-        cb message
-
-on_message = (socket, message_text)->
-    socket.get "data", (err, data)->
-        unless data?
-            console.log "Cant fetch data from socket"
-            return
-        
-        Room.findOne(_id: data.room._id).populate("master").exec (err, room)->
-            unless room?
-                console.log "Wrong room"
-                return
-                
-            message =
-                text: message_text
-                username: data.displayname
-                room: data.room.name
-                timestamp: dateFormat(new Date(), df)
-                allow_send: true
-                out_of_history: false
-                event_type: "chat_message"
-            
-            console.log "Incoming message (%s): %s", data.hero.displayname, message_text
-            
-            re = new RegExp("^/([^ ]*)")
-            cmd = re.exec(message.text)
-            if cmd?
-                switch cmd[1]
-                    when 'roll'
-                        roll_die message, (msg)->
-                            send_message socket, msg
-                    when 'me'
-                        player_event message, (msg)->
-                            send_message socket, msg
-                    when 'event'
-                        if data.is_master
-                            master_event message, (msg)->
-                                send_message socket, msg
-                    when 'as'
-                        if data.is_master
-                            master_as message, (msg)->
-                                send_message socket, msg 
-                    when 'help'
-                        help message, data.is_master, (msg)->
-                            send_message socket, msg
-                    when 'kick'
-                        if data.is_master
-                            player = message.text.split(" ").slice(1)[0]
-                            kick socket, message, player, (msg)->
-                                send_message socket, msg
-                    when 'stats'
-                        player = message.text.split(" ").slice(1)[0]
-                        show_stats message, player, (msg)->
-                            send_message socket, msg
-            else            
-                send_message socket, message
-                        
-send_message = (socket, message)->
-    #console.log "send message", message
-    socket.get "data", (err, data)->                        
-        if data.is_master
-            displayname = message.username
-        else
-            displayname = "<span class='you'>You</span>"
-        socket.emit message.event_type,
-            text: message.text
-            username: displayname
-            room: message.room
-            timestamp: message.timestamp
-            event_type: message.event_type
-        
-        unless message.allow_send
-            return
-        
-        if message.out_of_history
-            socket.broadcast.to(data.room.name).emit message.event_type, message
-        else            
-            history = new History
-                room: data.room._id
-                user: data.user._id
-                timestamp: new Date()
-                event_type: message.event_type
-                text: message.text
-                displayname: message.username
-
-            history.save (err)->
-                if err?
-                    console.log err
-                else
-                    socket.broadcast.to(data.room.name).emit message.event_type, message
-                                
+fs = require 'fs'
+root = require('path').normalize(__dirname + '/..')
+handlers_path = root + '/app/handlers'
+fs.readdirSync(handlers_path).forEach (file) ->
+    @[file.slice(0, -7)] = require "#{handlers_path}/#{file}"
                     
                                 
     
@@ -261,75 +108,6 @@ kick = (socket, message, player)->
     message.out_of_history = true
     cb message
     
-on_get_history = (socket)->
-    socket.get "data", (err, data)->
-        unless data?
-            return
-        history_list = []
-        History.find(room: data.room._id).populate("user").exec (err, history)->
-            unless history
-                return
-            _.each history, (e, i)->
-                history_list.push
-                    timestamp: dateFormat(e.timestamp, df)
-                    event_type: e.event_type
-                    username: e.displayname
-                    text: e.text
-            socket.emit "history", history_list
-
-on_error = (socket)->
-    console.log err
-    
-on_room_description = (socket, desc)->
-    socket.get "data", (err, data)->
-        unless data?
-            return false
-
-        Room.update
-            _id: data.room._id
-        ,
-            $set:
-                description: desc
-        , (e, n)->
-            socket.broadcast.to(data.room.name).emit "room_history", desc
-            
-on_notes = (socket, notes)->
-    socket.get "data", (err, data)->
-        unless data?
-            return false
-
-        Hero.update
-            user: data.user._id
-        ,
-            $set:
-                notes: notes
-        , (e, n)->
-            return true
-
-on_hero_description = (socket, desc)->
-    socket.get "data", (err, data)->
-        unless data?
-            return false
-
-        Hero.update
-            user: data.user._id
-        ,
-            $set:
-                description: desc
-        , (e, n)->
-            return true
-    
-on_update_layout = (socket, layout)->
-    socket.get "data", (err, data)->
-        unless data?
-            return false
-            
-        Hero.update user: data.user._id,
-            $set:
-                layout: layout
-            , (e, n)->
-                return true
-    
 
 exports.init = (io)->
     sockets = io.sockets
@@ -342,25 +120,25 @@ exports.init = (io)->
             data = event.args[0]
             switch event.name
                 when "message"
-                    on_message socket, data
+                    messages.on_message socket, data
                 when "request_history"
-                    on_get_history socket
+                    ui.on_get_history socket
                 when "connect"
                     on_connect socket, data
                 when "update_layout"
-                    on_update_layout socket, data
+                    ui.on_update_layout socket, data
                 when "room_description"
-                    on_room_description socket, data
+                    ui.on_room_description socket, data
                 when "hero_description"
-                    on_hero_description socket, data
+                    ui.on_hero_description socket, data
                 when "notes"
-                    on_notes socket, data
+                    ui.on_notes socket, data
                 when "disconnect"
                     on_disconnect socket
                 when "quit"
                     on_disconnect socket
                 when "error"
-                    on_error socket, err
+                    ui.on_error socket, err
                     
         socket.emit "plz_connect"
                     

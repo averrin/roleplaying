@@ -32,7 +32,7 @@ HeroSchema = new Schema
     settings: Schema.Types.Mixed
     inventory:
         type: [Schema.Types.ObjectId]
-        ref: 'Item'
+        ref: 'Slot'
     
 #
 # Schema statics

@@ -97,6 +97,8 @@ root.layout_change = (ev, ui)->
         status_widget: gridster.serialize($("#status_widget"))[0]
         notes_widget: gridster.serialize($("#notes_widget"))[0]
         hero_widget: gridster.serialize($("#hero_widget"))[0]
+        inventory_widget: gridster.serialize($("#inventory_widget"))[0]
+        master_widget: gridster.serialize($("#master_widget"))[0]
     root.socket.emit "update_layout", layout
 
 $(document).ready ->

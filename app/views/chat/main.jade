@@ -11,7 +11,7 @@ block main
         br
         a(href='javascript://')#request_history Request history
 
-block sidebar
+block list_players
     ul#player_list
 
 block status
@@ -25,3 +25,13 @@ block notes
 block hero
     #hero_description(contenteditable="true")
         != hero.description
+
+block inventory
+    #inventory
+        ul
+        each slot in hero.inventory
+            li= slot.item.description
+
+block mastery
+    #mastery
+        | nothing here

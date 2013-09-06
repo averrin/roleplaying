@@ -22,7 +22,7 @@ block content
           )
             .widget_header Players
             .widget_content
-              block sidebar
+              block list_players
           li#status_widget.widget(
             data-col="#{hero.layout.status_widget.col}",
             data-row="#{hero.layout.status_widget.row}",
@@ -38,7 +38,7 @@ block content
             data-sizey="#{hero.layout.notes_widget.size_y}",
             data-sizex="#{hero.layout.notes_widget.size_x}"
           )
-            .widget_header Note
+            .widget_header Notes
             .widget_content
               block notes
           li#hero_widget.widget(
@@ -50,6 +50,27 @@ block content
             #hero.widget_header(data-hero="#{hero._id}")!= "Hero: " + hero.displayname
             .widget_content
               block hero
+
+          li#inventory_widget.widget(
+            data-col="#{hero.layout.inventory_widget.col}",
+            data-row="#{hero.layout.inventory_widget.row}",
+            data-sizey="#{hero.layout.inventory_widget.size_y}",
+            data-sizex="#{hero.layout.inventory_widget.size_x}"
+          )
+            .widget_header Inventory
+            .widget_content
+              block inventory
+
+          if is_master
+              li#master_widget.widget(
+                data-col="#{hero.layout.master_widget.col}",
+                data-row="#{hero.layout.master_widget.row}",
+                data-sizey="#{hero.layout.master_widget.size_y}",
+                data-sizex="#{hero.layout.master_widget.size_x}"
+              )
+                .widget_header Master workshop
+                .widget_content
+                  block mastery
               
   include input_form
 
