@@ -1,28 +1,6 @@
 root = exports ? this
 
-root.templates =
-    user_in_list: _.template "<li data-user='<%=user_id%>'><%=username%></li>"
-    user_join: _.template "<article class='system_event'>
-    <em><strong><%=username%></strong> join to our room</em>
-    </article>"
-    user_left: _.template "<article class='system_event'>
-    <em><strong><%=username%></strong> left our room</em>
-    </article>"
-    chat_message: _.template "<article class='message'><small class='timestamp'>[<%=timestamp%>]</small>
-    <strong><%=username%>:</strong> <%=text%>
-    </article>"
-    
-    event: _.template "<article class='event'>
-    <em><strong><%=username%></strong> <%=text%></em>
-    </article>"
-    
-    master_event: _.template "<article class='master_event'>
-    <em><%=text%></em>
-    </article>"
-    
-    system_message: _.template "<article class='system_event'>
-    <em><%=text%></em>
-    </article>"
+root.templates = {}
 
 root.add_user_to_list = (user) ->
     $("#player_list").append root.templates["user_in_list"] user
@@ -136,6 +114,10 @@ $(document).ready ->
         root.show_history data
         
     root.socket.on "connected", (data)->
+        _.each _.keys(data.templates), (e,i)->
+            t = data.templates[e]
+            t = Function "obj", t.slice(15, t.length-2)
+            root.templates[e] = t
         $(".loader").hide()
         $(".widgets").show()
         $("#player_list").html ""

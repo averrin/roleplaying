@@ -47,7 +47,7 @@ html(lang='en')
         a.navbar-brand(href='/') RPG Workshop
         if req.user
           p.navbar-text.pull-right#user(data-user="#{req.user._id}", data-username="#{req.user.name}", data-admin="#{req.user.admin}")
-            | Welcome, #{req.user.name} #{req.user.admin ? "[admin]" : ""}
+            | Welcome, #{req.user.name} <span class='#{req.user.admin ? "label label-success" : ""}'>#{req.user.admin ? "admin" : ""}</span>
             | | 
             a(href='/logout') logout
         else

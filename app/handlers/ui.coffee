@@ -12,6 +12,44 @@ History = mongoose.model 'History'
 df = "mmmm dS, HH:MM"
 df = "HH:MM:ss"
 
+
+exports.get_templates = (data)->
+    uin = '<li class="dropdown" data-user="<%=user_id%>">
+              <a id="user_<%=user_id%>" role="button" data-toggle="dropdown" href="#"><%=username%></b></a>
+              <ul id="menu_<%user_id%>" class="dropdown-menu pull-right" role="menu" aria-labelledby="user_<%=user_id%>">
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="http://twitter.com/fat">Action</a></li>'
+    if data.is_master
+        uin += '<li role="presentation"><a role="menuitem" tabindex="-1" href="http://twitter.com/fat">Another action</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="http://twitter.com/fat">Something else here</a></li>
+                <li role="presentation" class="divider"></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1" href="http://twitter.com/fat">Separated link</a></li>'
+    uin += '</ul>
+            </li>'
+    templates =
+        user_in_list: _.template(uin).source
+        user_join: _.template("<article class='system_event'>
+        <em><strong><%=username%></strong> join to our room</em>
+        </article>").source
+        user_left: _.template("<article class='system_event'>
+        <em><strong><%=username%></strong> left our room</em>
+        </article>").source
+        chat_message: _.template("<article class='message'><small class='timestamp'>[<%=timestamp%>]</small>
+        <strong><%=username%>:</strong> <%=text%>
+        </article>").source
+        
+        event: _.template("<article class='event'>
+        <em><strong><%=username%></strong> <%=text%></em>
+        </article>").source
+        
+        master_event: _.template("<article class='master_event'>
+        <em><%=text%></em>
+        </article>").source
+        
+        system_message: _.template("<article class='system_event'>
+        <em><%=text%></em>
+        </article>").source
+    return templates
+
 exports.on_get_history = (socket)->
     socket.get "data", (err, data)->
         unless data?

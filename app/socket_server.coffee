@@ -58,8 +58,10 @@ on_connect = (socket, data) ->
                 user_id: user._id
                 room: room.name
             socket.set "data", data
+            templates = ui.get_templates data
             socket.emit "connected",
                 timestamp: now
+                templates: templates
             pl = _.pluck _.pluck(socket.all.clients(data.room.name), 'store'), 'data'
             players = []
             _.each pl[0], (e,i)->
@@ -90,7 +92,7 @@ on_disconnect = (socket)->
             room.save (err)->
                 console.log err, "user disconnect"
             
-kick = (socket, message, player)->
+kick = (socket, message, player, cb)->
     if "/" + player in _.keys(socket.all.manager.rooms)
         message.event_type = "disconnect"
         message.text = player + " was kicked"
