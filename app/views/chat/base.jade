@@ -2,11 +2,16 @@ extends ../layout
 
 block content
 
-  .navbar.navbar-inverse
+  .navbar#chat_bar
     .container    
         ul.nav.navbar-nav
-          li
-            button.btn.btn-default.navbar-btn Players
+          button.btn.btn-primary.navbar-btn Players
+          button.btn.btn-primary.navbar-btn Room desc
+          button.btn.btn-primary.navbar-btn Notes
+          button.btn.btn-primary.navbar-btn Inventory
+          button.btn.btn-default.navbar-btn Stats
+        p.navbar-text.pull-right
+            | <strong>#{hero.displayname}</strong>
           
   
   img(src='/img/preloader.gif').loader

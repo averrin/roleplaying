@@ -95,7 +95,7 @@ $(document).ready ->
     $(".widget_header").on "mouseout", () -> gridster.disable()
     
 
-    root.socket = io.connect()
+    root.socket = io.connect('http://averr.in:3300')
 
     CKEDITOR.on 'instanceReady', ()->
         if 'room_description' in CKEDITOR.instances
