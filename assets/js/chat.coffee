@@ -58,6 +58,7 @@ root.room_description = (desc)->
 root.routes =
     plz_connect: root.connect
     chat_message: root.add_to_chat
+    pm: root.add_to_chat
     event: root.add_to_chat
     master_event: root.add_to_chat
     system_message: root.add_to_chat

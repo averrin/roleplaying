@@ -37,6 +37,10 @@ exports.get_templates = (data)->
         <strong><%=username%>:</strong> <%=text%>
         </article>").source
         
+        pm: _.template("<article class='pm'><small class='timestamp'>[<%=timestamp%>]</small>
+        <strong><%=username%> only for you:</strong><br><em><%=text%></em>
+        </article>").source
+        
         event: _.template("<article class='event'>
         <em><strong><%=username%></strong> <%=text%></em>
         </article>").source

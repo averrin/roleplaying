@@ -87,6 +87,18 @@ show_stats = (message, player, cb)->
             message.text = f "<strong>%s description:</strong><br>%s", player, hero[0].description
     
         cb message
+        
+pm = (message, player, socket, cb)->
+    message.allow_send = false
+    words = message.text.split ' '
+    message.event_type = 'pm'
+    message.text = words.slice(2).join " "
+    sockets = socket.all.manager.rooms["/" + player]
+    _.each sockets, (e,i)->
+        socket.all.socket(e).emit message.event_type, message
+    message.text = f '<em>Only to %s:</em><br>%s', player, message.text
+    message.event_type = 'chat_message'
+    cb message
 
 exports.on_message = (socket, message_text)->
     socket.get "data", (err, data)->
@@ -144,6 +156,10 @@ exports.on_message = (socket, message_text)->
                     when 'stats'
                         player = message.text.split(" ").slice(1)[0]
                         show_stats message, player, (msg)->
+                            send_message socket, msg
+                    when 'pm'
+                        player = message.text.split(" ").slice(1)[0]
+                        pm message, player, socket, (msg)->
                             send_message socket, msg
             else            
                 send_message socket, message
