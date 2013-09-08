@@ -11,7 +11,7 @@ block content
           button.btn.btn-primary.navbar-btn Inventory
           button.btn.btn-default.navbar-btn Stats
         p.navbar-text.pull-right
-            | <strong>#{hero.displayname}</strong>
+            | <strong>#{hero.displayname}</strong> <span class='#{is_master ? "label label-success" : ""}'>#{is_master ? "master" : ""}</span>
           
   
   img(src='/img/preloader.gif').loader

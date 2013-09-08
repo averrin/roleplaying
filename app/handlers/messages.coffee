@@ -59,8 +59,9 @@ help = (message, is_master, cb)->
     message.event_type = "system_message"
     message.text = "<strong>Command list:</strong><ul>"
     message.text += "<li><strong>/me</strong> blah-blah &mdash; you do blah-blah as event</li>"
-    message.text += "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
+    message.text += "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice (shortcut: /r)</li>"
     message.text += "<li><strong>/stats</strong> Hero &mdash; get Hero description</li>"
+    message.text += "<li><strong>/pm</strong> Hero &mdash; private message to Hero (shortcut: /w)</li>"
     if is_master
         message.text += "<li><strong>/gmroll</strong> XdY+Z &mdash; you roll dice. But result visible only for you</li>"
         message.text += "<li><strong>/event</strong> blah-blah &mdash; show blah-blah as global event</li>"
@@ -127,10 +128,10 @@ exports.on_message = (socket, message_text)->
             console.log cmd
             if cmd?
                 switch cmd[1]
-                    when 'roll'
+                    when 'roll', 'r'
                         roll_die message, false, (msg)->
                             send_message socket, msg
-                    when 'gmroll'
+                    when 'gmroll', 'gr'
                         if data.is_master
                             roll_die message, true, (msg)->
                                 send_message socket, msg
@@ -145,7 +146,7 @@ exports.on_message = (socket, message_text)->
                         if data.is_master
                             master_as message, (msg)->
                                 send_message socket, msg 
-                    when 'help'
+                    when 'help', 'h'
                         help message, data.is_master, (msg)->
                             send_message socket, msg
                     when 'kick'
@@ -157,7 +158,7 @@ exports.on_message = (socket, message_text)->
                         player = message.text.split(" ").slice(1)[0]
                         show_stats message, player, (msg)->
                             send_message socket, msg
-                    when 'pm'
+                    when 'pm', 'w'
                         player = message.text.split(" ").slice(1)[0]
                         pm message, player, socket, (msg)->
                             send_message socket, msg
