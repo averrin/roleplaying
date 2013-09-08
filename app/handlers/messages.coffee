@@ -16,7 +16,7 @@ df = "HH:MM:ss"
 
 roll_template = _.template "roll dice <%=d%> = <strong><%=result%></strong>"
 
-roll_die = (message, cb)->
+roll_die = (message, gm, cb)->
     d = message.text.slice(6).replace RegExp(" ", "g"), ""
     try
         result = dice.rollDie d
@@ -27,6 +27,9 @@ roll_die = (message, cb)->
             d: d
             result: result
         message.event_type = "event"
+        message.allow_send = !gm
+        if gm
+            message.text += ' (as master)'
     else
         message.event_type = "system_message"
         message.text = "Wrong /roll format"
@@ -59,6 +62,7 @@ help = (message, is_master, cb)->
     message.text += "<li><strong>/roll</strong> XdY+Z &mdash; you roll dice</li>"
     message.text += "<li><strong>/stats</strong> Hero &mdash; get Hero description</li>"
     if is_master
+        message.text += "<li><strong>/gmroll</strong> XdY+Z &mdash; you roll dice. But result visible only for you</li>"
         message.text += "<li><strong>/event</strong> blah-blah &mdash; show blah-blah as global event</li>"
         message.text += "<li><strong>/as</strong> Name blah-blah &mdash; say blah-blah as Name</li>"
         message.text += "<li><strong>/kick</strong> Player &mdash; kick player from room</li>"
@@ -106,13 +110,18 @@ exports.on_message = (socket, message_text)->
             
             console.log "Incoming message (%s): %s", data.hero.displayname, message_text
             
-            re = new RegExp("^/([^ ]*)")
+            re = new RegExp("^\/(\\S+)")
             cmd = re.exec(message.text)
+            console.log cmd
             if cmd?
                 switch cmd[1]
                     when 'roll'
-                        roll_die message, (msg)->
+                        roll_die message, false, (msg)->
                             send_message socket, msg
+                    when 'gmroll'
+                        if data.is_master
+                            roll_die message, true, (msg)->
+                                send_message socket, msg
                     when 'me'
                         player_event message, (msg)->
                             send_message socket, msg

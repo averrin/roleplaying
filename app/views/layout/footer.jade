@@ -1,0 +1,15 @@
+script(defer, src="/socket.io/socket.io.js")    
+script(src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js")    
+!= js('vendor/bootstrap')
+!= js('vendor/underscore')
+!= js('main')
+script.
+  document.write('<script src="http://'
+  + (location.host || 'localhost').split(':')[0]
+  + ':3301/livereload.js"></'
+  + 'script>')
+  $("a[href='"+location.pathname+"']").parent().addClass("active")
+  $("#new_room").on("click", function(ev){location = "/rooms/new"})
+  $(".join_room").on("click", function(ev){location = "/rooms/" + $(this).data("room")})
+
+block scripts
