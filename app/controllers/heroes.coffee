@@ -29,26 +29,16 @@ exports.create = (req, res) ->
         row: 1
         size_x: 2
         size_y: 2
-    notes_widget:
-        col: 5
-        row: 3
-        size_x: 2
-        size_y: 2
     hero_widget:
         col: 7
         row: 1
-        size_x: 2
-        size_y: 2
+        size_x: 4
+        size_y: 4
     status_widget:
         col: 1
         row: 1
         size_x: 4
         size_y: 1
-    inventory_widget:
-        col: 7
-        row: 3
-        size_x: 2
-        size_y: 2
     master_widget:
         col: 11
         row: 3

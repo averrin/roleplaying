@@ -17,11 +17,11 @@ block status
         != room.description
 
 block notes
-    #notes(contenteditable="true")
+    textarea#notes.ckeditor
         != hero.notes
 
 block hero
-    #hero_description(contenteditable="true")
+    textarea#hero_description.ckeditor
         != hero.description
 
 block inventory

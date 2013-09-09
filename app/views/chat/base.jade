@@ -44,15 +44,7 @@ block content
             #room.widget_header(data-room="#{room.name}")!= "Room <strong>"+room.name+"</strong> description"
             .widget_content
               block status
-          li#notes_widget.widget(
-            data-col="#{hero.layout.notes_widget.col}",
-            data-row="#{hero.layout.notes_widget.row}",
-            data-sizey="#{hero.layout.notes_widget.size_y}",
-            data-sizex="#{hero.layout.notes_widget.size_x}"
-          )
-            .widget_header Notes
-            .widget_content
-              block notes
+
           li#hero_widget.widget(
             data-col="#{hero.layout.hero_widget.col}",
             data-row="#{hero.layout.hero_widget.row}",
@@ -61,17 +53,21 @@ block content
           )
             #hero.widget_header(data-hero="#{hero._id}")!= "Hero: " + hero.displayname
             .widget_content
-              block hero
+                ul.nav.nav-tabs#hero_tabs
+                    li.active: a(href="#hero_desc", data-toggle="tab") Desc
+                    li: a(href="#inventory", data-toggle="tab") Inventory
+                    li: a(href="#stats", data-toggle="tab") Stats
+                    li: a(href="#notes", data-toggle="tab", data-target="#notes") Notes
 
-          li#inventory_widget.widget(
-            data-col="#{hero.layout.inventory_widget.col}",
-            data-row="#{hero.layout.inventory_widget.row}",
-            data-sizey="#{hero.layout.inventory_widget.size_y}",
-            data-sizex="#{hero.layout.inventory_widget.size_x}"
-          )
-            .widget_header Inventory
-            .widget_content
-              block inventory
+                .tab-content
+                    #hero_desc.tab-pane
+                        block hero
+                    #inventory.tab-pane
+                        block inventory
+                    #stats.tab-pane
+                        block stats
+                    #notes.tab-pane
+                        block notes
 
           if is_master
               li#master_widget.widget(
@@ -90,3 +86,10 @@ block scripts
     != js('vendor/jquery.gridster.min')
     != js('chat')
     script(defer, src="/ckeditor/ckeditor.js")
+    script.
+        $('#hero_tabs a').click(function (e) {
+            e.preventDefault()
+            $(this).tab('show')
+            console.log(this)
+        })
+        $("#hero_tabs a:last").tab('show')

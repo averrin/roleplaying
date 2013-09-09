@@ -33,7 +33,9 @@ HeroSchema = new Schema
     inventory:
         type: [Schema.Types.ObjectId]
         ref: 'Slot'
-    
+    stats:
+        type: [Schema.Types.ObjectId]
+        ref: 'Stat'
 #
 # Schema statics
 #
@@ -45,3 +47,32 @@ HeroSchema.statics =
     return
 
 Hero = mongoose.model 'Hero', HeroSchema
+
+
+ProtoStatSchema = new Schema
+    room:
+        type: Schema.Types.ObjectId
+        ref: 'Root'
+    title:
+        type: String
+    initial:
+        type: Number
+
+
+ProtoStat = mongoose.model 'ProtoStat', ProtoStatSchema
+
+
+StatSchema = new Schema
+    hero:
+        type: Schema.Types.ObjectId
+        ref: 'Hero'
+    proto:
+        type: Schema.Types.ObjectId
+        ref: 'ProtoStat'
+    current:
+        type: Number
+    max:
+        type: Number
+
+
+Stat = mongoose.model 'Stat', StatSchema

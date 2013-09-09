@@ -74,18 +74,17 @@ root.layout_change = (ev, ui)->
         chat_widget: gridster.serialize($("#chat_widget"))[0]
         list_widget: gridster.serialize($("#list_widget"))[0]
         status_widget: gridster.serialize($("#status_widget"))[0]
-        notes_widget: gridster.serialize($("#notes_widget"))[0]
         hero_widget: gridster.serialize($("#hero_widget"))[0]
-        inventory_widget: gridster.serialize($("#inventory_widget"))[0]
         master_widget: gridster.serialize($("#master_widget"))[0]
     root.socket.emit "update_layout", layout
 
 $(document).ready ->
     
     
-    $(".gridster ul").gridster
+    $(".gridster ul.widgets").gridster
         widget_margins: [4, 4]
         widget_base_dimensions: [160, 160]
+        widget_selector: "li.widget"
         draggable:
             stop: (ev, ui) ->
                 root.layout_change ev, ui
@@ -100,11 +99,11 @@ $(document).ready ->
     CKEDITOR.on 'instanceReady', ()->
         if 'room_description' in CKEDITOR.instances
             CKEDITOR.instances['room_description'].on 'change', ()->
-                root.socket.emit "room_description", $("#room_description").html()
+                root.socket.emit "room_description", CKEDITOR.instances['room_description'].getData()
         CKEDITOR.instances['notes'].on 'change', ()->
-            root.socket.emit "notes", $("#notes").html()
+            root.socket.emit "notes", CKEDITOR.instances['notes'].getData()
         CKEDITOR.instances['hero_description'].on 'change', ()->
-            root.socket.emit "hero_description", $("#hero_description").html()
+            root.socket.emit "hero_description", CKEDITOR.instances['hero_description'].getData()
 
   
     root.socket.on "server_message", (data) ->
